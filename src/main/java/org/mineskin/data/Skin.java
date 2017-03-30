@@ -10,6 +10,7 @@ public class Skin {
 	public                            long     timestamp;
 	@SerializedName("private") public boolean  prvate;
 	public                            int      views;
+	public                            int      accountId;
 
 	public double nextRequest;
 
