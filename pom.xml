@@ -72,4 +72,10 @@
         </dependency>
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>inventive-repo</id>
+            <url>http://repo.inventivetalent.org/content/groups/public/</url>
+        </repository>
+    </repositories>
 </project>
