@@ -76,6 +76,8 @@ public class MineskinClient {
 				handleResponse(body, callback);
 			} catch (Exception e) {
 				callback.exception(e);
+			} catch (Throwable throwable) {
+				throw new RuntimeException(throwable);
 			}
 		});
 	}
@@ -127,6 +129,8 @@ public class MineskinClient {
 				handleResponse(body, callback);
 			} catch (Exception e) {
 				callback.exception(e);
+			} catch (Throwable throwable) {
+				throw new RuntimeException(throwable);
 			}
 		});
 	}
@@ -178,6 +182,8 @@ public class MineskinClient {
 				handleResponse(body, callback);
 			} catch (Exception e) {
 				callback.exception(e);
+			} catch (Throwable throwable) {
+				throw new RuntimeException(throwable);
 			}
 		});
 	}
@@ -228,6 +234,8 @@ public class MineskinClient {
 				handleResponse(body, callback);
 			} catch (Exception e) {
 				callback.exception(e);
+			} catch (Throwable throwable) {
+				throw new RuntimeException(throwable);
 			}
 		});
 	}
@@ -245,6 +253,8 @@ public class MineskinClient {
 			callback.done(skin);
 		} catch (JsonParseException e) {
 			callback.parseException(e, body);
+		} catch (Throwable throwable) {
+			throw new RuntimeException(throwable);
 		}
 	}
 
