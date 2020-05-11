@@ -31,7 +31,7 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>org.inventivetalent:skullclient**</include>
+                                    <include>org.mineskin:java-client**</include>
                                     <include>org.jsoup:jsoup**</include>
                                     <include>com.google.code.gson:gson**</include>
                                     <include>com.google.guava:guava**</include>
