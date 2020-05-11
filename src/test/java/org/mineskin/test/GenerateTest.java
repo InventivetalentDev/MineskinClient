@@ -23,7 +23,7 @@ public class GenerateTest {
 
 	private final MineskinClient client = new MineskinClient();
 
-	@Test(timeout = 20000L)
+	@Test(timeout = 90000L)
 	public void urlTest() throws InterruptedException {
 		Thread.sleep(7000);
 
@@ -59,7 +59,7 @@ public class GenerateTest {
 		Thread.sleep(1000);
 	}
 
-	@Test(timeout = 20000L)
+	@Test(timeout = 90000L)
 	public void uploadTest() throws InterruptedException, IOException {
 		Thread.sleep(7000);
 
