@@ -25,6 +25,7 @@ public class SkinOptions {
         this.visibility = visibility;
     }
 
+    @Deprecated
     protected String toUrlParam() {
         return String.format(URL_FORMAT, this.name, this.variant.getName(), this.visibility.getCode());
     }

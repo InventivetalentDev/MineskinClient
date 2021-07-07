@@ -89,7 +89,7 @@ public class MineskinClient {
                 .userAgent(userAgent)
                 .ignoreContentType(true)
                 .ignoreHttpErrors(true)
-                .timeout(10000);
+                .timeout(30000);
         if (apiKey != null) {
             connection.header("Authorization", "Bearer " + apiKey);
         }
@@ -127,7 +127,7 @@ public class MineskinClient {
             }
         }, requestExecutor);
     }
-    
+
     public CompletableFuture<Skin> generateUrl(String url) {
         return generateUrl(url, SkinOptions.none());
     }
@@ -148,6 +148,7 @@ public class MineskinClient {
                 JsonObject body = options.toJson();
                 body.addProperty("url", url);
                 Connection connection = generateRequest("/url")
+                        .header("Content-Type", "application/json")
                         .requestBody(body.toString());
                 return handleResponse(connection.execute().body());
             } catch (Exception e) {
@@ -174,6 +175,7 @@ public class MineskinClient {
                 }
 
                 Connection connection = generateRequest("/upload")
+                        // It really doesn't like setting a content-type header here for some reason
                         .data("file", file.getName(), new FileInputStream(file));
                 options.addAsData(connection);
                 return handleResponse(connection.execute().body());
@@ -202,7 +204,8 @@ public class MineskinClient {
 
                 JsonObject body = options.toJson();
                 body.addProperty("user", uuid.toString());
-                Connection connection = generateRequest("/url")
+                Connection connection = generateRequest("/user")
+                        .header("Content-Type", "application/json")
                         .requestBody(body.toString());
                 return handleResponse(connection.execute().body());
             } catch (Exception e) {
