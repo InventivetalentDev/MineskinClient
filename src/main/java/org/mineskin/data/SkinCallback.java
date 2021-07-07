@@ -1,5 +1,6 @@
 package org.mineskin.data;
 
+@Deprecated
 public interface SkinCallback {
 
 	void done(Skin skin);
