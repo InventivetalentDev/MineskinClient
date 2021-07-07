@@ -26,8 +26,8 @@ public class OldGenerateTest {
 		Thread.sleep(7000);
 
 		CountDownLatch latch = new CountDownLatch(1);
-		final String name = "JavaClient-Test-Url";
-		this.client.generateUrl("https://i.imgur.com/0Fna2GH.png", SkinOptions.name(name), new SkinCallback() {
+		final String name = "JavaClient-Url";
+		this.client.generateUrl("https://i.imgur.com/5e04o4f.png", SkinOptions.name(name), new SkinCallback() {
 
 			@Override
 			public void exception(Exception exception) {
@@ -62,7 +62,7 @@ public class OldGenerateTest {
 		Thread.sleep(7000);
 
 		CountDownLatch latch = new CountDownLatch(1);
-		final String name = "JavaClient-Test-Upload-" + System.currentTimeMillis();
+		final String name = "JavaClient-Upload";
 		File file = File.createTempFile("mineskin-temp-upload-image", ".png");
 		ImageIO.write(randomImage(64, 32), "png", file);
 		this.client.generateUpload(file, SkinOptions.name(name), new SkinCallback() {

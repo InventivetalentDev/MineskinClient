@@ -23,8 +23,8 @@ public class GenerateTest {
 	public void urlTest() throws InterruptedException {
 		Thread.sleep(7000);
 
-		final String name = ("JavaClient-Url-" + System.currentTimeMillis()).substring(0, 16);
-		Skin skin = this.client.generateUrl("https://i.imgur.com/b5MJJvB.png", SkinOptions.name(name)).join();
+		final String name = "JavaClient-Url";
+		Skin skin = this.client.generateUrl("https://i.imgur.com/jkhZKDX.png", SkinOptions.name(name)).join();
 		validateSkin(skin, name);
 		Thread.sleep(1000);
 	}
@@ -33,7 +33,7 @@ public class GenerateTest {
 	public void uploadTest() throws InterruptedException, IOException {
 		Thread.sleep(7000);
 
-		final String name = ("JavaClient-Upload-" + System.currentTimeMillis()).substring(0, 16);
+		final String name = "JavaClient-Upload";
 		File file = File.createTempFile("mineskin-temp-upload-image", ".png");
 		ImageIO.write(randomImage(64, 32), "png", file);
 		Skin skin = this.client.generateUpload(file, SkinOptions.name(name)).join();
