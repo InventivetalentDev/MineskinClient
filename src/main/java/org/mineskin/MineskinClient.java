@@ -195,7 +195,7 @@ public class MineskinClient {
     public CompletableFuture<Skin> generateUpload(File file, SkinOptions options) throws FileNotFoundException {
         checkNotNull(file);
         checkNotNull(options);
-        return generateUpload(new FileInputStream(file));
+        return generateUpload(new FileInputStream(file), options);
     }
 
     /**
