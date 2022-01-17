@@ -160,11 +160,18 @@ public class MineskinClient {
     }
 
     public CompletableFuture<Skin> generateUpload(InputStream is) {
-        return generateUpload(is, SkinOptions.none());
+        return generateUpload(is, SkinOptions.none(), null);
     }
 
-
     public CompletableFuture<Skin> generateUpload(InputStream is, SkinOptions options) {
+        return generateUpload(is, options, options.getName() + ".png");
+    }
+
+    public CompletableFuture<Skin> generateUpload(InputStream is, String name) {
+        return generateUpload(is, SkinOptions.none(), name);
+    }
+
+    public CompletableFuture<Skin> generateUpload(InputStream is, SkinOptions options, String name) {
         checkNotNull(is);
         checkNotNull(options);
         return CompletableFuture.supplyAsync(() -> {
@@ -176,7 +183,7 @@ public class MineskinClient {
 
                 Connection connection = generateRequest("/upload")
                         // It really doesn't like setting a content-type header here for some reason
-                        .data("file", options.getName(), is);
+                        .data("file", name, is);
                 options.addAsData(connection);
                 return handleResponse(connection.execute().body());
             } catch (Exception e) {
@@ -195,7 +202,7 @@ public class MineskinClient {
     public CompletableFuture<Skin> generateUpload(File file, SkinOptions options) throws FileNotFoundException {
         checkNotNull(file);
         checkNotNull(options);
-        return generateUpload(new FileInputStream(file), options);
+        return generateUpload(new FileInputStream(file), options, file.getName());
     }
 
     /**
