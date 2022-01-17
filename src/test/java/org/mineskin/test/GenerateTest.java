@@ -41,6 +41,16 @@ public class GenerateTest {
 		Thread.sleep(1000);
 	}
 
+	@Test(timeout = 40000L)
+	public void uploadRenderedImageTest() throws InterruptedException, IOException {
+		Thread.sleep(7000);
+
+		final String name = "JavaClient-Upload";
+		Skin skin = this.client.generateUpload(randomImage(64, 32), SkinOptions.name(name)).join();
+		validateSkin(skin, name);
+		Thread.sleep(1000);
+	}
+
 	void validateSkin(Skin skin, String name) {
 		assertNotNull(skin);
 		assertNotNull(skin.data);
