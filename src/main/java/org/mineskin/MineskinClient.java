@@ -10,8 +10,10 @@ import org.mineskin.data.MineskinException;
 import org.mineskin.data.Skin;
 import org.mineskin.data.SkinCallback;
 
-import java.io.File;
-import java.io.FileInputStream;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.RenderedImage;
+import java.io.*;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -157,15 +159,20 @@ public class MineskinClient {
         }, requestExecutor);
     }
 
-    public CompletableFuture<Skin> generateUpload(File file) {
-        return generateUpload(file, SkinOptions.none());
+    public CompletableFuture<Skin> generateUpload(InputStream is) {
+        return generateUpload(is, SkinOptions.none(), null);
     }
 
-    /**
-     * Uploads and generates skin data from a local file (with default options)
-     */
-    public CompletableFuture<Skin> generateUpload(File file, SkinOptions options) {
-        checkNotNull(file);
+    public CompletableFuture<Skin> generateUpload(InputStream is, SkinOptions options) {
+        return generateUpload(is, options, options.getName() + ".png");
+    }
+
+    public CompletableFuture<Skin> generateUpload(InputStream is, String name) {
+        return generateUpload(is, SkinOptions.none(), name);
+    }
+
+    public CompletableFuture<Skin> generateUpload(InputStream is, SkinOptions options, String name) {
+        checkNotNull(is);
         checkNotNull(options);
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -176,13 +183,41 @@ public class MineskinClient {
 
                 Connection connection = generateRequest("/upload")
                         // It really doesn't like setting a content-type header here for some reason
-                        .data("file", file.getName(), new FileInputStream(file));
+                        .data("file", name, is);
                 options.addAsData(connection);
                 return handleResponse(connection.execute().body());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }, requestExecutor);
+    }
+
+    /**
+     * Uploads and generates skin data from a local file (with default options)
+     */
+    public CompletableFuture<Skin> generateUpload(File file) throws FileNotFoundException {
+        return generateUpload(file, SkinOptions.none());
+    }
+
+    public CompletableFuture<Skin> generateUpload(File file, SkinOptions options) throws FileNotFoundException {
+        checkNotNull(file);
+        checkNotNull(options);
+        return generateUpload(new FileInputStream(file), options, file.getName());
+    }
+
+    /**
+     * Uploads and generates skin data from a RenderedImage object (with default options)
+     */
+    public CompletableFuture<Skin> generateUpload(RenderedImage image) throws IOException {
+        return generateUpload(image, SkinOptions.none());
+    }
+
+    public CompletableFuture<Skin> generateUpload(RenderedImage image, SkinOptions options) throws IOException {
+        checkNotNull(image);
+        checkNotNull(options);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", baos);
+        return generateUpload(new ByteArrayInputStream(baos.toByteArray()), options);
     }
 
     public CompletableFuture<Skin> generateUser(UUID uuid) {

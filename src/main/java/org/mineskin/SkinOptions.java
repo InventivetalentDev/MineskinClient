@@ -56,6 +56,9 @@ public class SkinOptions {
         }
     }
 
+    public String getName() {
+        return name;
+    }
 
     @Deprecated
     public static SkinOptions create(String name, Model model, Visibility visibility) {
