@@ -11,7 +11,6 @@ import org.mineskin.data.Skin;
 import org.mineskin.data.SkinCallback;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.UUID;
@@ -36,7 +35,6 @@ public class MineskinClient {
     private final String userAgent;
     private final String apiKey;
 
-    private final JsonParser jsonParser = new JsonParser();
     private final Gson gson = new Gson();
 
     private long nextRequest = 0;
@@ -471,7 +469,7 @@ public class MineskinClient {
     @Deprecated
     void handleResponse(String body, SkinCallback callback) {
         try {
-            JsonObject jsonObject = jsonParser.parse(body).getAsJsonObject();
+            JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
             if (jsonObject.has("error")) {
                 callback.error(jsonObject.get("error").getAsString());
                 return;
