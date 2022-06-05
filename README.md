@@ -7,7 +7,7 @@ You can also use [mineskin.org](https://mineskin.org) to directly generate skin 
 
 The API requires official Minecraft accounts to upload the skin textures.  
 If you own a Minecraft account you don't actively use and want to contibute to the API's speed,
-please [add your account here]([https://inventivetalent.org/contact](https://mineskin.org/account))!
+please [add your account here](https://mineskin.org/account)!
 
 ```java
 MineSkinClient client = new MineSkinClient("MyUserAgent");
