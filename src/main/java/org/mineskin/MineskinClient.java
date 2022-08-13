@@ -477,7 +477,7 @@ public class MineskinClient {
             }
 
             Skin skin = gson.fromJson(jsonObject, Skin.class);
-            this.nextRequest = System.currentTimeMillis() + ((long) ((skin.nextRequest + 10) * 1000L));
+            this.nextRequest = System.currentTimeMillis() + ((long) ((skin.nextRequest + (this.apiKey == null ? 10 : 0)) * 1000L));
             callback.done(skin);
         } catch (JsonParseException e) {
             callback.parseException(e, body);
