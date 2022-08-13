@@ -11,7 +11,6 @@ import org.mineskin.data.Skin;
 import org.mineskin.data.SkinCallback;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.UUID;
@@ -256,7 +255,7 @@ public class MineskinClient {
         }
 
         Skin skin = gson.fromJson(jsonObject, Skin.class);
-        this.nextRequest = System.currentTimeMillis() + ((long) ((skin.nextRequest + 10) * 1000L));
+        this.nextRequest = System.currentTimeMillis() + ((long) ((skin.nextRequest + (this.apiKey == null ? 10 : 0)) * 1000L));
         return skin;
     }
 
