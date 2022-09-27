@@ -21,7 +21,7 @@ client.generateUrl("https://image.url", SkinOptions.name("some cool skin")).then
 <dependency>
     <groupId>org.mineskin</groupId>
     <artifactId>java-client</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
 </dependency>
 ```
 ```xml
