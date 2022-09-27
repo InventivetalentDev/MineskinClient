@@ -13,7 +13,9 @@ public class Skin {
     public boolean prvate;
     public int views;
     public int accountId;
+    public DelayInfo delayInfo;
 
+    @Deprecated
     public double nextRequest;
 
 }
