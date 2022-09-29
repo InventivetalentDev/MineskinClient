@@ -237,7 +237,7 @@ public class MineskinClient {
                 }
 
                 JsonObject body = options.toJson();
-                body.addProperty("user", uuid.toString());
+                body.addProperty("uuid", uuid.toString());
                 Connection connection = generateRequest("/user")
                         .header("Content-Type", "application/json")
                         .requestBody(body.toString());
