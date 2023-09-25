@@ -44,7 +44,9 @@ public class GenerateTest {
         File file = File.createTempFile("mineskin-temp-upload-image", ".png");
         ImageIO.write(randomImage(64, 32), "png", file);
         System.out.println("#uploadTest");
+        long start = System.currentTimeMillis();
         Skin skin = this.client.generateUpload(file, SkinOptions.name(name)).join();
+        System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
         validateSkin(skin, name);
         Thread.sleep(1000);
     }
@@ -55,14 +57,16 @@ public class GenerateTest {
 
         final String name = "JavaClient-Upload";
         System.out.println("#uploadRenderedImageTest");
+        long start = System.currentTimeMillis();
         Skin skin = this.client.generateUpload(randomImage(64, 32), SkinOptions.name(name)).join();
+        System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
         validateSkin(skin, name);
         Thread.sleep(1000);
     }
 
-    @Test(timeout = 160_000L)
+    @Test(timeout = 320_000L)
     public void multiUploadTest() throws InterruptedException, IOException {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 5; i++) {
             uploadTest();
             uploadRenderedImageTest();
         }
