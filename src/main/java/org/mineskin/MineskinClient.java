@@ -143,7 +143,7 @@ public class MineskinClient {
             try {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
-                    Thread.sleep(delay + 1000);
+                    Thread.sleep(delay + 10);
                 }
 
                 JsonObject body = options.toJson();
@@ -177,7 +177,7 @@ public class MineskinClient {
             try {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
-                    Thread.sleep(delay + 1000);
+                    Thread.sleep(delay + 10);
                 }
 
                 Connection connection = generateRequest("/upload")
@@ -233,7 +233,7 @@ public class MineskinClient {
             try {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
-                    Thread.sleep(delay + 1000);
+                    Thread.sleep(delay + 10);
                 }
 
                 JsonObject body = options.toJson();
@@ -327,7 +327,7 @@ public class MineskinClient {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
                     callback.waiting(delay);
-                    Thread.sleep(delay + 1000);
+                    Thread.sleep(delay + 10);
                 }
 
                 callback.uploading();
@@ -384,7 +384,7 @@ public class MineskinClient {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
                     callback.waiting(delay);
-                    Thread.sleep(delay + 1000);
+                    Thread.sleep(delay + 10);
                 }
 
                 callback.uploading();
@@ -442,7 +442,7 @@ public class MineskinClient {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
                     callback.waiting(delay);
-                    Thread.sleep(delay + 1000);
+                    Thread.sleep(delay + 10);
                 }
 
                 callback.uploading();
