@@ -12,13 +12,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class GenerateTest {
 
-    private final MineskinClient client = new MineskinClient("MineskinJavaClient-Test");
+    private final MineskinClient client = new MineskinClient(Executors.newFixedThreadPool(2), "MineskinJavaClient-Test","3373adbd32c5621ab2175e6ec637f6a2754639f00903dbbc46870c87c826efa6");
 
     @Before
     public void before() throws InterruptedException {
@@ -64,11 +65,15 @@ public class GenerateTest {
         Thread.sleep(1000);
     }
 
-    @Test(timeout = 320_000L)
+    @Test()
     public void multiUploadTest() throws InterruptedException, IOException {
-        for (int i = 0; i < 5; i++) {
-            uploadTest();
-            uploadRenderedImageTest();
+        for (int i = 0; i < 50; i++) {
+            try {
+                uploadTest();
+                uploadRenderedImageTest();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

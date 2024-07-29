@@ -3,7 +3,6 @@ package org.mineskin;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.mineskin.data.MineskinException;
@@ -31,51 +30,27 @@ public class MineskinClient {
     private static final String UPLOAD_FORMAT = "https://api.mineskin.org/generate/upload?%s";
     private static final String USER_FORMAT = "https://api.mineskin.org/generate/user/%s?%s";
 
-    private final Executor requestExecutor;
+    private final Executor generateExecutor;
+    private final Executor getExecutor;
+
     private final String userAgent;
     private final String apiKey;
 
-    private final JsonParser jsonParser = new JsonParser();
     private final Gson gson = new Gson();
+
+    private final RequestHandler requestHandler;
 
     private long nextRequest = 0;
 
-    @Deprecated
-    public MineskinClient() {
-        this.requestExecutor = Executors.newSingleThreadExecutor();
-        this.userAgent = "MineSkin-JavaClient";
-        this.apiKey = null;
-    }
 
-    @Deprecated
-    public MineskinClient(Executor requestExecutor) {
-        this.requestExecutor = checkNotNull(requestExecutor);
-        this.userAgent = "MineSkin-JavaClient";
-        this.apiKey = null;
-    }
-
-    public MineskinClient(String userAgent) {
-        this.requestExecutor = Executors.newSingleThreadExecutor();
-        this.userAgent = checkNotNull(userAgent);
-        this.apiKey = null;
-    }
-
-    public MineskinClient(String userAgent, String apiKey) {
-        this.requestExecutor = Executors.newSingleThreadExecutor();
+    public MineskinClient(Executor generateExecutor, String userAgent, String apiKey) {
+        this.generateExecutor = checkNotNull(generateExecutor);
         this.userAgent = checkNotNull(userAgent);
         this.apiKey = apiKey;
     }
 
-    public MineskinClient(Executor requestExecutor, String userAgent, String apiKey) {
-        this.requestExecutor = checkNotNull(requestExecutor);
-        this.userAgent = checkNotNull(userAgent);
-        this.apiKey = apiKey;
-    }
-
-    public MineskinClient(Executor requestExecutor, String userAgent) {
-        this.requestExecutor = checkNotNull(requestExecutor);
-        this.userAgent = checkNotNull(userAgent);
-        this.apiKey = null;
+    public MineskinClient(RequestHandler requestHandler) {
+        this.requestHandler = checkNotNull(requestHandler);
     }
 
     public long getNextRequest() {
@@ -84,49 +59,15 @@ public class MineskinClient {
 
     /////
 
-    private Connection generateRequest(String endpoint) {
-        Connection connection = Jsoup.connect(GENERATE_BASE + endpoint)
-                .method(Connection.Method.POST)
-                .userAgent(userAgent)
-                .ignoreContentType(true)
-                .ignoreHttpErrors(true)
-                .timeout(30000);
-        if (apiKey != null) {
-            connection.header("Authorization", "Bearer " + apiKey);
-        }
-        return connection;
-    }
 
-    private Connection getRequest(String endpoint) {
-        return Jsoup.connect(GET_BASE + endpoint)
-                .method(Connection.Method.GET)
-                .userAgent(userAgent)
-                .ignoreContentType(true)
-                .ignoreHttpErrors(true)
-                .timeout(5000);
-    }
-
-
-    public CompletableFuture<Skin> getId(long id) {
+    public CompletableFuture<Skin> getSkinByUuid(UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Connection connection = getRequest("/id/" + id);
-                return handleResponse(connection.execute().body());
+                return requestHandler.getJson(GET_BASE + "/uuid/" + uuid, Skin.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }, requestExecutor);
-    }
-
-    public CompletableFuture<Skin> getUuid(UUID uuid) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Connection connection = getRequest("/uuid/" + uuid);
-                return handleResponse(connection.execute().body());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, requestExecutor);
+        }, getExecutor);
     }
 
     public CompletableFuture<Skin> generateUrl(String url) {
@@ -155,7 +96,7 @@ public class MineskinClient {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }, requestExecutor);
+        }, generateExecutor);
     }
 
     public CompletableFuture<Skin> generateUpload(InputStream is) {
@@ -188,7 +129,7 @@ public class MineskinClient {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }, requestExecutor);
+        }, generateExecutor);
     }
 
     /**
@@ -245,7 +186,7 @@ public class MineskinClient {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }, requestExecutor);
+        }, generateExecutor);
     }
 
     Skin handleResponse(String body) throws MineskinException, JsonParseException {
@@ -275,7 +216,7 @@ public class MineskinClient {
     @Deprecated
     public void getSkin(int id, SkinCallback callback) {
         checkNotNull(callback);
-        requestExecutor.execute(() -> {
+        generateExecutor.execute(() -> {
             try {
                 Connection connection = Jsoup
                         .connect(String.format(ID_FORMAT, id))
@@ -322,7 +263,7 @@ public class MineskinClient {
         checkNotNull(url);
         checkNotNull(options);
         checkNotNull(callback);
-        requestExecutor.execute(() -> {
+        generateExecutor.execute(() -> {
             try {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
@@ -379,7 +320,7 @@ public class MineskinClient {
         checkNotNull(file);
         checkNotNull(options);
         checkNotNull(callback);
-        requestExecutor.execute(() -> {
+        generateExecutor.execute(() -> {
             try {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
@@ -437,7 +378,7 @@ public class MineskinClient {
         checkNotNull(uuid);
         checkNotNull(options);
         checkNotNull(callback);
-        requestExecutor.execute(() -> {
+        generateExecutor.execute(() -> {
             try {
                 if (System.currentTimeMillis() < nextRequest) {
                     long delay = (nextRequest - System.currentTimeMillis());
