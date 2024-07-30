@@ -3,7 +3,7 @@ package org.mineskin;
 public enum Visibility {
 
 	PUBLIC(0),
-	PRIVATE(1);
+	UNLISTED(1);
 
 	private final int code;
 
