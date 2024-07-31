@@ -34,19 +34,15 @@ public class MineSkinClient {
     private static final String GENERATE_BASE = API_BASE + "/generate";
     private static final String GET_BASE = API_BASE + "/get";
 
-    private static final String ID_FORMAT = "https://api.mineskin.org/get/id/%s";
-    private static final String URL_FORMAT = "https://api.mineskin.org/generate/url?url=%s&%s";
-    private static final String UPLOAD_FORMAT = "https://api.mineskin.org/generate/upload?%s";
-    private static final String USER_FORMAT = "https://api.mineskin.org/generate/user/%s?%s";
 
     private final Executor generateExecutor;
     private final Executor getExecutor;
 
     private final RequestHandler requestHandler;
 
-    private AtomicLong nextRequest = new AtomicLong(0);
+    private final AtomicLong nextRequest = new AtomicLong(0);
 
-    MineSkinClient(RequestHandler requestHandler, Executor generateExecutor, Executor getExecutor) {
+    public MineSkinClient(RequestHandler requestHandler, Executor generateExecutor, Executor getExecutor) {
         this.requestHandler = checkNotNull(requestHandler);
         this.generateExecutor = checkNotNull(generateExecutor);
         this.getExecutor = checkNotNull(getExecutor);

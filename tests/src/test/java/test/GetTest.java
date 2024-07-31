@@ -1,20 +1,21 @@
 package test;
 
-import com.google.gson.Gson;
 import org.junit.Test;
 import org.mineskin.JsoupRequestHandler;
-import org.mineskin.MineSkinRequestException;
 import org.mineskin.MineSkinClient;
+import org.mineskin.MineSkinRequestException;
 import org.mineskin.response.GetSkinResponse;
 
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executors;
 
 import static org.junit.Assert.*;
 
 public class GetTest {
 
-    private final MineSkinClient client = new MineSkinClient(new JsoupRequestHandler("MineskinJavaClient-Test", null, 3000, new Gson()), Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor());
+    private final MineSkinClient client = MineSkinClient.builder()
+            .requestHandler(JsoupRequestHandler::new)
+            .userAgent("MineSkinClient/Tests")
+            .build();
 
     @Test
     public void getUuid() {
