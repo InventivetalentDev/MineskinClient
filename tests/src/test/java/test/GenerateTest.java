@@ -1,7 +1,10 @@
 package test;
 
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mineskin.ApacheRequestHandler;
 import org.mineskin.GenerateOptions;
 import org.mineskin.ImageUtil;
 import org.mineskin.JsoupRequestHandler;
@@ -10,21 +13,30 @@ import org.mineskin.MineSkinClientImpl;
 import org.mineskin.data.GeneratedSkin;
 import org.mineskin.data.Skin;
 import org.mineskin.data.Visibility;
+import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.response.GenerateResponse;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CompletionException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
 public class GenerateTest {
 
-    private static final MineSkinClient CLIENT = MineSkinClient.builder()
+    private static final MineSkinClient APACHE = MineSkinClient.builder()
+            .requestHandler(ApacheRequestHandler::new)
+            .userAgent("MineSkinClient-Apache/Tests")
+            .apiKey(System.getenv("MINESKIN_API_KEY"))
+            .build();
+    private static final MineSkinClient JSOUP = MineSkinClient.builder()
             .requestHandler(JsoupRequestHandler::new)
-            .userAgent("MineSkinClient/Tests")
+            .userAgent("MineSkinClient-Jsoup/Tests")
+            .apiKey(System.getenv("MINESKIN_API_KEY"))
             .build();
 
     static {
@@ -39,20 +51,36 @@ public class GenerateTest {
         Thread.sleep(1000);
     }
 
-    @Test(timeout = 40_000L)
-    public void urlTest() throws InterruptedException {
+    private static Stream<Arguments> clients() {
+        return Stream.of(
+                Arguments.of(APACHE),
+                Arguments.of(JSOUP)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void urlTest(MineSkinClient client) throws InterruptedException {
         Thread.sleep(1000);
 
         final String name = "JavaClient-Url";
-        GenerateResponse res = CLIENT.generateUrl("https://i.imgur.com/jkhZKDX.png", GenerateOptions.create().name(name)).join();
-        System.out.println(res);
-        Skin skin = res.getSkin();
-        validateSkin(skin, name);
+        try {
+            GenerateResponse res = client.generateUrl("https://i.imgur.com/jkhZKDX.png", GenerateOptions.create().name(name)).join();
+            System.out.println(res);
+            Skin skin = res.getSkin();
+            validateSkin(skin, name);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
         Thread.sleep(1000);
     }
 
-    @Test(timeout = 40_000L)
-    public void uploadTest() throws InterruptedException, IOException {
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void uploadTest(MineSkinClient client) throws InterruptedException, IOException {
         Thread.sleep(1000);
 
         final String name = "JavaClient-Upload";
@@ -60,26 +88,41 @@ public class GenerateTest {
         ImageIO.write(ImageUtil.randomImage(64, 32), "png", file);
         System.out.println("#uploadTest");
         long start = System.currentTimeMillis();
-        GenerateResponse res = CLIENT.generateUpload(file, GenerateOptions.create().visibility(Visibility.UNLISTED).name(name)).join();
-        System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
-        System.out.println(res);
-        Skin skin = res.getSkin();
-        validateSkin(skin, name);
+        try {
+            GenerateResponse res = client.generateUpload(file, GenerateOptions.create().visibility(Visibility.UNLISTED).name(name)).join();
+            System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(res);
+            Skin skin = res.getSkin();
+            validateSkin(skin, name);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
         Thread.sleep(1000);
     }
 
-    @Test(timeout = 40_000L)
-    public void uploadRenderedImageTest() throws InterruptedException, IOException {
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void uploadRenderedImageTest(MineSkinClient client) throws InterruptedException, IOException {
         Thread.sleep(1000);
 
         final String name = "JavaClient-Upload";
         System.out.println("#uploadRenderedImageTest");
         long start = System.currentTimeMillis();
-        GenerateResponse res =  CLIENT.generateUpload(ImageUtil.randomImage(64, 32), GenerateOptions.create().visibility(Visibility.UNLISTED).name(name)).join();
-        System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
-        System.out.println(res);
-        Skin skin = res.getSkin();
-        validateSkin(skin, name);
+        try {
+            GenerateResponse res = client.generateUpload(ImageUtil.randomImage(64, 32), GenerateOptions.create().visibility(Visibility.UNLISTED).name(name)).join();
+            System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(res);
+            Skin skin = res.getSkin();
+            validateSkin(skin, name);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
         Thread.sleep(1000);
     }
 //
