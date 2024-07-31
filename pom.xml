@@ -6,7 +6,7 @@
 
     <groupId>org.mineskin</groupId>
     <artifactId>client-parent</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>PARENT</version>
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
@@ -14,6 +14,13 @@
         <module>jsoup</module>
         <module>tests</module>
     </modules>
+
+    <properties>
+        <revision>2.0.0-SNAPSHOT</revision>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <build>
         <plugins>
