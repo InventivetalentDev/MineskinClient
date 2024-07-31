@@ -21,7 +21,7 @@ public class Example {
         GenerateOptions options = GenerateOptions.create()
                 .name("My Skin")
                 .visibility(Visibility.PUBLIC);
-        File file = new File("skin.jpg");
+        File file = new File("skin.png");
         CLIENT.generateUpload(file, options)
                 .thenAccept(response -> {
                     // get generated skin
