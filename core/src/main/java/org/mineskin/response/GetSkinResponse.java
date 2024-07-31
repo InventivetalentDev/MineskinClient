@@ -8,6 +8,7 @@ import org.mineskin.data.Skin;
 import java.util.Map;
 
 public class GetSkinResponse extends MineSkinResponse<ExistingSkin> {
+
     public GetSkinResponse(int status, Map<String, String> headers, JsonObject rawBody, Gson gson, Class<ExistingSkin> clazz) {
         super(status, headers, rawBody, gson, clazz);
     }

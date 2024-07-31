@@ -1,15 +1,14 @@
-# MineskinClient
+package org.mineskin;
 
-Client for [api.mineskin.org](https://mineskin.org)
+import org.mineskin.data.Skin;
+import org.mineskin.data.Visibility;
+import org.mineskin.exception.MineSkinRequestException;
+import org.mineskin.response.MineSkinResponse;
 
-Can be used to generate valid texture data from skin image files.  
-You can also use [mineskin.org](https://mineskin.org) to directly generate skin data from images.
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.concurrent.CompletionException;
 
-The API requires official Minecraft accounts to upload the skin textures.  
-If you own a Minecraft account you don't actively use and want to contibute to the API's speed,
-please [add your account here](https://mineskin.org/account)!
-
-```java
 public class Example {
 
     private static final MineSkinClient CLIENT = MineSkinClient.builder()
@@ -52,34 +51,3 @@ public class Example {
     }
 
 }
-```  
-
-
-```xml
-<depencies>
-    <dependency>
-        <groupId>org.mineskin</groupId>
-        <artifactId>java-client</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>org.mineskin</groupId>
-        <artifactId>java-client-jsoup</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
-    </dependency>
-<!-- alternatively use apache httpcommons -->
-<!--    <dependency>-->
-<!--        <groupId>org.mineskin</groupId>-->
-<!--        <artifactId>java-client-apache</artifactId>-->
-<!--        <version>2.0.0-SNAPSHOT</version>-->
-<!--    </dependency>-->
-</depencies>
-```
-```xml
-<repositories>
-    <repository>
-        <id>inventive-repo</id>
-        <url>https://repo.inventivetalent.org/repository/public/</url>
-    </repository>
-</repositories>
-```
