@@ -1,5 +1,6 @@
 package org.mineskin.response;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.Map;
@@ -42,7 +43,7 @@ public class MineSkinResponse<T> {
             int status,
             Map<String, String> headers,
             JsonObject rawBody,
-            T body
+            Gson gson, Class<T> clazz
     ) {
         if (rawBody.has("success")) {
             this.success = rawBody.get("success").getAsBoolean();
@@ -58,7 +59,7 @@ public class MineSkinResponse<T> {
         this.breadcrumb = headers.get("x-mineskin-breadcrumb");
 
         this.rawBody = rawBody;
-        this.body = body;
+        this.body = gson.fromJson(rawBody, clazz);
     }
 
     public boolean isSuccess() {

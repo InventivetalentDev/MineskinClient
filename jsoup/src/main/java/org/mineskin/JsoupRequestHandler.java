@@ -48,13 +48,12 @@ public class JsoupRequestHandler extends RequestHandler {
     private <T, R extends MineSkinResponse<T>> R wrapResponse(Connection.Response response, Class<T> clazz, ResponseConstructor<T, R> constructor) {
         try {
             JsonObject jsonBody = gson.fromJson(response.body(), JsonObject.class);
-            T body = gson.fromJson(jsonBody, clazz);
             System.out.println(response.headers()); //FIXME
             R wrapped = constructor.construct(
                     response.statusCode(),
                     lowercaseHeaders(response.headers()),
                     jsonBody,
-                    body
+                    gson, clazz
             );
             if (!wrapped.isSuccess()) {
                 throw new MineSkinRequestException(wrapped.getError().orElse("Request Failed"), wrapped);
