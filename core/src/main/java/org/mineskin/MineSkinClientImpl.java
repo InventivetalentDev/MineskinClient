@@ -38,6 +38,7 @@ public class MineSkinClientImpl implements MineSkinClient {
     private static final String GENERATE_BASE = API_BASE + "/generate";
     private static final String GET_BASE = API_BASE + "/get";
 
+    private static final Map<String, AtomicLong> DELAYS = new ConcurrentHashMap<>();
     private static final Map<String, AtomicLong> NEXT_REQUESTS = new ConcurrentHashMap<>();
 
     private final Executor generateExecutor;
@@ -249,11 +250,25 @@ public class MineSkinClientImpl implements MineSkinClient {
             return;
         }
         String key = String.valueOf(requestHandler.getApiKey());
+        AtomicLong delay = DELAYS.compute(key, (k, v) -> {
+            if (v == null) {
+                v = new AtomicLong(0);
+            }
+            if (delayInfo.millis() > v.get()) {
+                // use the highest delay
+                v.set(delayInfo.millis());
+            }
+            return v;
+        });
+        LOGGER.finer("Delaying next request by " + delay.get() + "ms");
         NEXT_REQUESTS.compute(key, (k, v) -> {
             if (v == null) {
                 v = new AtomicLong(System.currentTimeMillis());
             }
-            v.addAndGet(delayInfo.millis() + 10);
+            long next = System.currentTimeMillis() + delay.get() + 1;
+            if (next > v.get()) {
+                v.set(next);
+            }
             return v;
         });
     }
