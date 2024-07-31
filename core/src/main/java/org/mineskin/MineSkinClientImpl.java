@@ -4,10 +4,12 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.DelayInfo;
 import org.mineskin.data.ExistingSkin;
 import org.mineskin.data.GeneratedSkin;
+import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.response.GenerateResponse;
 import org.mineskin.response.GetSkinResponse;
+import org.mineskin.response.MineSkinResponse;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
@@ -100,10 +102,13 @@ public class MineSkinClientImpl implements MineSkinClient {
                 body.addProperty("url", url);
 
                 GenerateResponse res = requestHandler.postJson(GENERATE_BASE + "/url", body, GeneratedSkin.class, GenerateResponse::new);
-                handleDelayInfo(res.getDelayInfo());
+                handleResponse(res);
                 return res;
             } catch (IOException e) {
                 throw new MineskinException(e);
+            } catch (MineSkinRequestException e) {
+                handleResponse(e.getResponse());
+                throw e;
             }
         }, generateExecutor);
     }
@@ -143,10 +148,13 @@ public class MineSkinClientImpl implements MineSkinClient {
 
                 Map<String, String> data = options.toMap();
                 GenerateResponse res = requestHandler.postFormDataFile(GENERATE_BASE + "/upload", "file", fileName, is, data, GeneratedSkin.class, GenerateResponse::new);
-                handleDelayInfo(res.getDelayInfo());
+                handleResponse(res);
                 return res;
             } catch (IOException e) {
                 throw new MineskinException(e);
+            } catch (MineSkinRequestException e) {
+                handleResponse(e.getResponse());
+                throw e;
             }
         }, generateExecutor);
     }
@@ -207,12 +215,21 @@ public class MineSkinClientImpl implements MineSkinClient {
                 body.addProperty("uuid", uuid.toString());
 
                 GenerateResponse res = requestHandler.postJson(GENERATE_BASE + "/user", body, GeneratedSkin.class, GenerateResponse::new);
-                handleDelayInfo(res.getDelayInfo());
+                handleResponse(res);
                 return res;
             } catch (IOException e) {
                 throw new MineskinException(e);
+            } catch (MineSkinRequestException e) {
+                handleResponse(e.getResponse());
+                throw e;
             }
         }, generateExecutor);
+    }
+
+    private void handleResponse(MineSkinResponse<?> response) {
+        if (response instanceof GenerateResponse generateResponse) {
+            handleDelayInfo(generateResponse.getDelayInfo());
+        }
     }
 
     private void delayUntilNext() {
@@ -229,7 +246,13 @@ public class MineSkinClientImpl implements MineSkinClient {
 
     private void handleDelayInfo(DelayInfo delayInfo) {
         String key = String.valueOf(requestHandler.getApiKey());
-        NEXT_REQUESTS.put(key, new AtomicLong(System.currentTimeMillis() + delayInfo.millis() + 1));
+        NEXT_REQUESTS.compute(key, (k, v) -> {
+            if (v == null) {
+                v = new AtomicLong(System.currentTimeMillis());
+            }
+            v.addAndGet(delayInfo.millis() + 10);
+            return v;
+        });
     }
 
 }
