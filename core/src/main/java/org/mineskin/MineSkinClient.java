@@ -18,6 +18,11 @@ public interface MineSkinClient {
     }
 
     /**
+     * @return the next request timestamp in milliseconds
+     */
+    long getNextRequest();
+
+    /**
      * Get an existing skin by UUID (Note: not the player's UUID)
      */
     CompletableFuture<GetSkinResponse> getSkinByUuid(UUID uuid);
