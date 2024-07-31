@@ -92,10 +92,10 @@ public class ClientBuilder {
             throw new IllegalStateException("RequestHandlerConstructor is not set");
         }
         if ("MineSkinClient".equals(userAgent)) {
-            MineSkinClient.LOGGER.log(Level.WARNING, "Using default User-Agent: MineSkinClient - Please set a custom User-Agent");
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Using default User-Agent: MineSkinClient - Please set a custom User-Agent");
         }
         if (apiKey == null) {
-            MineSkinClient.LOGGER.log(Level.WARNING, "Creating MineSkinClient without API key");
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Creating MineSkinClient without API key");
         }
 
         if (getExecutor == null) {
@@ -114,7 +114,7 @@ public class ClientBuilder {
         }
 
         RequestHandler requestHandler = requestHandlerConstructor.construct(userAgent, apiKey, timeout, gson);
-        return new MineSkinClient(requestHandler, generateExecutor, getExecutor);
+        return new MineSkinClientImpl(requestHandler, generateExecutor, getExecutor);
     }
 
 }

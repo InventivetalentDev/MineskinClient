@@ -6,6 +6,7 @@ import org.mineskin.GenerateOptions;
 import org.mineskin.ImageUtil;
 import org.mineskin.JsoupRequestHandler;
 import org.mineskin.MineSkinClient;
+import org.mineskin.MineSkinClientImpl;
 import org.mineskin.data.GeneratedSkin;
 import org.mineskin.data.Skin;
 import org.mineskin.data.Visibility;
@@ -27,10 +28,10 @@ public class GenerateTest {
             .build();
 
     static {
-        MineSkinClient.LOGGER.setLevel(Level.ALL);
+        MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setLevel(Level.ALL);
-        MineSkinClient.LOGGER.addHandler(handler);
+        MineSkinClientImpl.LOGGER.addHandler(handler);
     }
 
     @Before

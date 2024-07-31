@@ -34,7 +34,7 @@ public class JsoupRequestHandler extends RequestHandler {
     }
 
     private Connection requestBase(Connection.Method method, String url) {
-        MineSkinClient.LOGGER.log(Level.FINE, method + " " + url);
+        MineSkinClientImpl.LOGGER.log(Level.FINE, method + " " + url);
         Connection connection = Jsoup.connect(url)
                 .method(method)
                 .userAgent(userAgent)
@@ -61,7 +61,7 @@ public class JsoupRequestHandler extends RequestHandler {
             }
             return wrapped;
         } catch (JsonParseException e) {
-            MineSkinClient.LOGGER.log(Level.WARNING, "Failed to parse response body: " + response.body(), e);
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to parse response body: " + response.body(), e);
             throw new MineskinException("Failed to parse response", e);
         }
     }
