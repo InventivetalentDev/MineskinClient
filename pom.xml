@@ -12,6 +12,7 @@
         <module>core</module>
         <module>apache</module>
         <module>jsoup</module>
+        <module>tests</module>
     </modules>
 
     <build>
@@ -56,19 +57,6 @@
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-        </dependency>
-    </dependencies>
 
     <repositories>
         <repository>

@@ -11,6 +11,7 @@ import org.mineskin.response.MineSkinResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class JsoupRequestHandler extends RequestHandler {
@@ -19,20 +20,19 @@ public class JsoupRequestHandler extends RequestHandler {
     private final String apiKey;
     private final int timeout;
 
-    private final Gson gson;
-
     public JsoupRequestHandler(
             String userAgent, String apiKey,
             int timeout,
             Gson gson) {
+        super(userAgent, apiKey, timeout, gson);
         this.userAgent = userAgent;
         this.apiKey = apiKey;
         this.timeout = timeout;
-        this.gson = gson;
     }
 
     private Connection requestBase(Connection.Method method, String url) {
         System.out.println(method + " " + url); //FIXME
+        MineSkinClient.LOGGER.log(Level.FINE, method + " " + url);
         Connection connection = Jsoup.connect(url)
                 .method(method)
                 .userAgent(userAgent)

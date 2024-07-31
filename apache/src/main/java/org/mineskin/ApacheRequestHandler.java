@@ -30,6 +30,7 @@ public class ApacheRequestHandler extends RequestHandler {
             String userAgent, String apiKey,
             int timeout,
             Gson gson) {
+        super(userAgent, apiKey, timeout, gson);
         this.gson = gson;
 
         List<Header> defaultHeaders = new ArrayList<>();

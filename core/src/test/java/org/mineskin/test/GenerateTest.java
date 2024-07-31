@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class GenerateTest {
 
-//    private final MineskinClient client = new MineskinClient(Executors.newFixedThreadPool(2), "MineskinJavaClient-Test","3373adbd32c5621ab2175e6ec637f6a2754639f00903dbbc46870c87c826efa6");
+//    private final MineSkinClient client = new MineSkinClient(Executors.newFixedThreadPool(2), "MineskinJavaClient-Test","3373adbd32c5621ab2175e6ec637f6a2754639f00903dbbc46870c87c826efa6");
 //
 //    @Before
 //    public void before() throws InterruptedException {
