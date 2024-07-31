@@ -41,6 +41,11 @@
             <id>inventive-repo</id>
             <url>https://repo.inventivetalent.org/repository/public/</url>
         </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/inventivetalentdev/mineskinclient</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
