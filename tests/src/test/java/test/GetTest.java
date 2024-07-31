@@ -3,7 +3,7 @@ package test;
 import org.junit.Test;
 import org.mineskin.JsoupRequestHandler;
 import org.mineskin.MineSkinClient;
-import org.mineskin.MineSkinRequestException;
+import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.response.GetSkinResponse;
 
 import java.util.concurrent.CompletionException;
@@ -20,6 +20,7 @@ public class GetTest {
     @Test
     public void getUuid() {
         GetSkinResponse res = client.getSkinByUuid("8cadf501765e412fbdfa1a3fa9a87710").join();
+        System.out.println(res);
         assertTrue(res.isSuccess());
         assertEquals(200, res.getStatus());
         assertNotNull(res.getBody());

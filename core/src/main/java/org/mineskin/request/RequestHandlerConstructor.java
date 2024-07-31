@@ -1,4 +1,4 @@
-package org.mineskin;
+package org.mineskin.request;
 
 import com.google.gson.Gson;
 

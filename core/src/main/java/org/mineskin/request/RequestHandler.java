@@ -1,7 +1,8 @@
-package org.mineskin;
+package org.mineskin.request;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.mineskin.response.ResponseConstructor;
 import org.mineskin.response.MineSkinResponse;
 
 import java.io.IOException;

@@ -2,6 +2,8 @@ package org.mineskin;
 
 import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
+import org.mineskin.data.Variant;
+import org.mineskin.data.Visibility;
 
 import java.util.Map;
 

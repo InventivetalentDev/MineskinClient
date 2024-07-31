@@ -1,4 +1,4 @@
-package org.mineskin.data;
+package org.mineskin.exception;
 
 public class MineskinException extends RuntimeException {
     public MineskinException() {

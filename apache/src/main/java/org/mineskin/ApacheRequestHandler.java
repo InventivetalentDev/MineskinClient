@@ -13,6 +13,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
+import org.mineskin.request.RequestHandler;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

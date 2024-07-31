@@ -1,8 +1,7 @@
-package org.mineskin;
+package org.mineskin.response;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.mineskin.response.MineSkinResponse;
 
 import java.util.Map;
 

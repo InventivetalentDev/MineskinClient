@@ -1,4 +1,4 @@
-package org.mineskin;
+package org.mineskin.exception;
 
 import org.mineskin.response.MineSkinResponse;
 

@@ -2,8 +2,9 @@ package org.mineskin;
 
 import com.google.gson.JsonObject;
 import org.mineskin.data.DelayInfo;
-import org.mineskin.data.MineskinException;
+import org.mineskin.exception.MineskinException;
 import org.mineskin.data.Skin;
+import org.mineskin.request.RequestHandler;
 import org.mineskin.response.GenerateResponse;
 import org.mineskin.response.GetSkinResponse;
 
@@ -230,7 +231,7 @@ public class MineSkinClient {
     }
 
     private void handleDelayInfo(DelayInfo delayInfo) {
-        this.nextRequest.set(System.currentTimeMillis() + delayInfo.millis + 1);
+        this.nextRequest.set(System.currentTimeMillis() + delayInfo.millis() + 1);
     }
 
 }

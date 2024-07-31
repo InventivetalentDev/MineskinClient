@@ -5,8 +5,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.mineskin.data.MineskinException;
+import org.mineskin.exception.MineSkinRequestException;
+import org.mineskin.exception.MineskinException;
+import org.mineskin.request.RequestHandler;
 import org.mineskin.response.MineSkinResponse;
+import org.mineskin.response.ResponseConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;

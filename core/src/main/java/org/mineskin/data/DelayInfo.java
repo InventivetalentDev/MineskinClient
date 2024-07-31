@@ -1,8 +1,4 @@
 package org.mineskin.data;
 
-public class DelayInfo {
-
-    public int millis;
-    public int seconds;
-
+public record DelayInfo(int millis, int seconds) {
 }

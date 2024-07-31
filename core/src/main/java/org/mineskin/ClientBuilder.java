@@ -1,6 +1,8 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
+import org.mineskin.request.RequestHandler;
+import org.mineskin.request.RequestHandlerConstructor;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

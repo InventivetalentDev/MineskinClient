@@ -1,9 +1,4 @@
 package org.mineskin.data;
 
-public class Texture {
-
-	public String value;
-	public String signature;
-	public String url;
-
+public record Texture(String value, String signature, String url) {
 }

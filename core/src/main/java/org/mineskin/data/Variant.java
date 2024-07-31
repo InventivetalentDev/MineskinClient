@@ -1,4 +1,4 @@
-package org.mineskin;
+package org.mineskin.data;
 
 public enum Variant {
     AUTO(""),
