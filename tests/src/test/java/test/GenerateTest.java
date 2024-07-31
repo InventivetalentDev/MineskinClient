@@ -20,6 +20,8 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -28,15 +30,19 @@ import static org.junit.Assert.*;
 
 public class GenerateTest {
 
+    private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
+
     private static final MineSkinClient APACHE = MineSkinClient.builder()
             .requestHandler(ApacheRequestHandler::new)
             .userAgent("MineSkinClient-Apache/Tests")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
+            .generateExecutor(EXECUTOR)
             .build();
     private static final MineSkinClient JSOUP = MineSkinClient.builder()
             .requestHandler(JsoupRequestHandler::new)
             .userAgent("MineSkinClient-Jsoup/Tests")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
+            .generateExecutor(EXECUTOR)
             .build();
 
     static {
