@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
@@ -35,13 +36,12 @@ public class MineSkinClientImpl implements MineSkinClient {
     private static final String GENERATE_BASE = API_BASE + "/generate";
     private static final String GET_BASE = API_BASE + "/get";
 
+    private static final Map<String, AtomicLong> NEXT_REQUESTS = new ConcurrentHashMap<>();
 
     private final Executor generateExecutor;
     private final Executor getExecutor;
 
     private final RequestHandler requestHandler;
-
-    private final AtomicLong nextRequest = new AtomicLong(0);
 
     public MineSkinClientImpl(RequestHandler requestHandler, Executor generateExecutor, Executor getExecutor) {
         this.requestHandler = checkNotNull(requestHandler);
@@ -50,7 +50,8 @@ public class MineSkinClientImpl implements MineSkinClient {
     }
 
     public long getNextRequest() {
-        return nextRequest.get();
+        String key = String.valueOf(requestHandler.getApiKey());
+        return NEXT_REQUESTS.computeIfAbsent(key, k -> new AtomicLong(0)).get();
     }
 
     /////
@@ -215,8 +216,8 @@ public class MineSkinClientImpl implements MineSkinClient {
     }
 
     private void delayUntilNext() {
-        if (System.currentTimeMillis() < nextRequest.get()) {
-            long delay = (nextRequest.get() - System.currentTimeMillis());
+        if (System.currentTimeMillis() < getNextRequest()) {
+            long delay = (getNextRequest() - System.currentTimeMillis());
             try {
                 LOGGER.finer("Waiting for " + delay + "ms until next request");
                 Thread.sleep(delay + 1);
@@ -227,7 +228,8 @@ public class MineSkinClientImpl implements MineSkinClient {
     }
 
     private void handleDelayInfo(DelayInfo delayInfo) {
-        this.nextRequest.set(System.currentTimeMillis() + delayInfo.millis() + 1);
+        String key = String.valueOf(requestHandler.getApiKey());
+        NEXT_REQUESTS.put(key, new AtomicLong(System.currentTimeMillis() + delayInfo.millis() + 1));
     }
 
 }

@@ -12,9 +12,17 @@ import java.util.Map;
 public abstract class RequestHandler {
 
     protected final Gson gson;
+    protected final String userAgent;
+    protected final String apiKey;
 
     public RequestHandler(String userAgent, String apiKey, int timeout, Gson gson) {
+        this.userAgent = userAgent;
+        this.apiKey = apiKey;
         this.gson = gson;
+    }
+
+    public String getApiKey() {
+        return apiKey;
     }
 
     public abstract <T, R extends MineSkinResponse<T>> R getJson(String url, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException;
