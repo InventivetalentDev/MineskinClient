@@ -2,8 +2,9 @@ package org.mineskin;
 
 import com.google.gson.JsonObject;
 import org.mineskin.data.DelayInfo;
+import org.mineskin.data.ExistingSkin;
+import org.mineskin.data.GeneratedSkin;
 import org.mineskin.exception.MineskinException;
-import org.mineskin.data.Skin;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.response.GenerateResponse;
 import org.mineskin.response.GetSkinResponse;
@@ -17,7 +18,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -74,7 +74,7 @@ public class MineSkinClient {
         checkNotNull(uuid);
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return requestHandler.getJson(GET_BASE + "/uuid/" + uuid, Skin.class, GetSkinResponse::new);
+                return requestHandler.getJson(GET_BASE + "/uuid/" + uuid, ExistingSkin.class, GetSkinResponse::new);
             } catch (IOException e) {
                 throw new MineskinException(e);
             }
@@ -102,7 +102,7 @@ public class MineSkinClient {
                 JsonObject body = options.toJson();
                 body.addProperty("url", url);
 
-                GenerateResponse res = requestHandler.postJson(GENERATE_BASE + "/url", body, Skin.class, GenerateResponse::new);
+                GenerateResponse res = requestHandler.postJson(GENERATE_BASE + "/url", body, GeneratedSkin.class, GenerateResponse::new);
                 handleDelayInfo(res.getDelayInfo());
                 return res;
             } catch (IOException e) {
@@ -144,9 +144,8 @@ public class MineSkinClient {
             try {
                 delayUntilNext();
 
-                Map<String, String> data = new HashMap<>();
-                options.addTo(data);
-                GenerateResponse res = requestHandler.postFormDataFile(GENERATE_BASE + "/upload", "file", fileName, is, data, Skin.class, GenerateResponse::new);
+                Map<String, String> data = options.toMap();
+                GenerateResponse res = requestHandler.postFormDataFile(GENERATE_BASE + "/upload", "file", fileName, is, data, GeneratedSkin.class, GenerateResponse::new);
                 handleDelayInfo(res.getDelayInfo());
                 return res;
             } catch (IOException e) {
@@ -210,7 +209,7 @@ public class MineSkinClient {
                 JsonObject body = options.toJson();
                 body.addProperty("uuid", uuid.toString());
 
-                GenerateResponse res = requestHandler.postJson(GENERATE_BASE + "/user", body, Skin.class, GenerateResponse::new);
+                GenerateResponse res = requestHandler.postJson(GENERATE_BASE + "/user", body, GeneratedSkin.class, GenerateResponse::new);
                 handleDelayInfo(res.getDelayInfo());
                 return res;
             } catch (IOException e) {
@@ -223,6 +222,7 @@ public class MineSkinClient {
         if (System.currentTimeMillis() < nextRequest.get()) {
             long delay = (nextRequest.get() - System.currentTimeMillis());
             try {
+                LOGGER.finer("Waiting for " + delay + "ms until next request");
                 Thread.sleep(delay + 1);
             } catch (InterruptedException e) {
                 throw new MineskinException("Interrupted while waiting for next request", e);

@@ -12,7 +12,7 @@ public class ClientBuilder {
 
     private String userAgent = "MineSkinClient";
     private String apiKey = null;
-    private int timeout = 5000;
+    private int timeout = 10000;
     private Gson gson = new Gson();
     private Executor getExecutor = null;
     private Executor generateExecutor = null;

@@ -3,6 +3,8 @@ package org.mineskin.response;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,31 +15,13 @@ public class MineSkinResponse<T> {
 
     private final String message;
     private final String error;
+    private final List<String> warnings;
 
     private final String server;
     private final String breadcrumb;
 
     private final JsonObject rawBody;
     private final T body;
-
-    public MineSkinResponse(
-            boolean success,
-            int status,
-            String message,
-            String error,
-            String server,
-            String breadcrumb,
-            JsonObject rawBody,
-            T body) {
-        this.success = success;
-        this.status = status;
-        this.message = message;
-        this.error = error;
-        this.server = server;
-        this.breadcrumb = breadcrumb;
-        this.rawBody = rawBody;
-        this.body = body;
-    }
 
     public MineSkinResponse(
             int status,
@@ -53,6 +37,7 @@ public class MineSkinResponse<T> {
         this.status = status;
         this.message = rawBody.has("message") ? rawBody.get("message").getAsString() : null;
         this.error = rawBody.has("error") ? rawBody.get("error").getAsString() : null;
+        this.warnings = rawBody.has("warnings") ? gson.fromJson(rawBody.get("warnings"), List.class) : Collections.emptyList();
 
 
         this.server = headers.get("x-mineskin-server");
@@ -80,6 +65,10 @@ public class MineSkinResponse<T> {
 
     public String getMessageOrError() {
         return success ? message : error;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
     }
 
     public String getServer() {

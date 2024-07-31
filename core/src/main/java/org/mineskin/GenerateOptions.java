@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.Variant;
 import org.mineskin.data.Visibility;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class GenerateOptions {
@@ -47,6 +48,12 @@ public class GenerateOptions {
             json.addProperty("visibility", visibility.getCode());
         }
         return json;
+    }
+
+    protected Map<String, String> toMap() {
+        Map<String, String> data = new HashMap<>();
+        addTo(data);
+        return data;
     }
 
     protected void addTo(Map<String, String> data) {

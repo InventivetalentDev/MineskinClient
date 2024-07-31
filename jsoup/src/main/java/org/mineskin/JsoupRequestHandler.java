@@ -34,7 +34,6 @@ public class JsoupRequestHandler extends RequestHandler {
     }
 
     private Connection requestBase(Connection.Method method, String url) {
-        System.out.println(method + " " + url); //FIXME
         MineSkinClient.LOGGER.log(Level.FINE, method + " " + url);
         Connection connection = Jsoup.connect(url)
                 .method(method)
@@ -51,7 +50,6 @@ public class JsoupRequestHandler extends RequestHandler {
     private <T, R extends MineSkinResponse<T>> R wrapResponse(Connection.Response response, Class<T> clazz, ResponseConstructor<T, R> constructor) {
         try {
             JsonObject jsonBody = gson.fromJson(response.body(), JsonObject.class);
-            System.out.println(response.headers()); //FIXME
             R wrapped = constructor.construct(
                     response.statusCode(),
                     lowercaseHeaders(response.headers()),
@@ -63,6 +61,7 @@ public class JsoupRequestHandler extends RequestHandler {
             }
             return wrapped;
         } catch (JsonParseException e) {
+            MineSkinClient.LOGGER.log(Level.WARNING, "Failed to parse response body: " + response.body(), e);
             throw new MineskinException("Failed to parse response", e);
         }
     }
@@ -92,9 +91,10 @@ public class JsoupRequestHandler extends RequestHandler {
                                                                  String key, String filename, InputStream in,
                                                                  Map<String, String> data,
                                                                  Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
-        Connection connection = requestBase(Connection.Method.POST, url);
-        connection.data(data);
+        Connection connection = requestBase(Connection.Method.POST, url)
+                .header("Content-Type", "multipart/form-data");
         connection.data(key, filename, in);
+        connection.data(data);
         Connection.Response response = connection.execute();
         return wrapResponse(response, clazz, constructor);
     }
