@@ -245,6 +245,9 @@ public class MineSkinClientImpl implements MineSkinClient {
     }
 
     private void handleDelayInfo(DelayInfo delayInfo) {
+        if (delayInfo == null) {
+            return;
+        }
         String key = String.valueOf(requestHandler.getApiKey());
         NEXT_REQUESTS.compute(key, (k, v) -> {
             if (v == null) {
