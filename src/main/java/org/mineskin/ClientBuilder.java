@@ -3,6 +3,7 @@ package org.mineskin;
 import com.google.gson.Gson;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
+import org.mineskin.request.RequestHandlerImpl;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -25,7 +26,7 @@ public class ClientBuilder {
      * Create a new ClientBuilder
      */
     public static ClientBuilder create() {
-        return new ClientBuilder();
+        return new ClientBuilder().requestHandler(RequestHandlerImpl::new);
     }
 
     /**
@@ -90,12 +91,6 @@ public class ClientBuilder {
     public MineSkinClient build() {
         if (requestHandlerConstructor == null) {
             throw new IllegalStateException("RequestHandlerConstructor is not set");
-        }
-        if ("MineSkinClient".equals(userAgent)) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Using default User-Agent: MineSkinClient - Please set a custom User-Agent");
-        }
-        if (apiKey == null) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Creating MineSkinClient without API key");
         }
 
         if (getExecutor == null) {

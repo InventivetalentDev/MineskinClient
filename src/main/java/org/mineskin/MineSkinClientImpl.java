@@ -237,7 +237,6 @@ public class MineSkinClientImpl implements MineSkinClient {
         if (System.currentTimeMillis() < getNextRequest()) {
             long delay = (getNextRequest() - System.currentTimeMillis());
             try {
-                LOGGER.finer("Waiting for " + delay + "ms until next request");
                 Thread.sleep(delay + 1);
             } catch (InterruptedException e) {
                 throw new MineskinException("Interrupted while waiting for next request", e);
