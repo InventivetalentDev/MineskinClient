@@ -12,6 +12,7 @@
         <module>core</module>
         <module>apache</module>
         <module>jsoup</module>
+        <module>java11</module>
         <module>tests</module>
     </modules>
 
