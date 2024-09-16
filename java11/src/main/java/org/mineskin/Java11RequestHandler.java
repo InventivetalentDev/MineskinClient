@@ -17,7 +17,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.nio.file.Files;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -68,14 +67,20 @@ public class Java11RequestHandler extends RequestHandler {
                 ));
     }
 
-    @Override
     public <T, R extends MineSkinResponse<T>> R getJson(String url, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
-        HttpRequest request = HttpRequest.newBuilder()
+
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .GET()
-                .header("User-Agent", this.userAgent)
-                .build();
-
+                .header("User-Agent", this.userAgent);
+        HttpRequest request;
+        if (apiKey != null) {
+            request = requestBuilder
+                    .header("Authorization", "Bearer "+apiKey)
+                    .header("Accept", "application/json").build();
+        } else {
+            request = requestBuilder.build();
+        }
         HttpResponse<String> response = null;
         try {
             response = this.httpClient.send(request, BodyHandlers.ofString());
@@ -85,14 +90,21 @@ public class Java11RequestHandler extends RequestHandler {
         return wrapResponse(response, clazz, constructor);
     }
 
-    @Override
     public <T, R extends MineSkinResponse<T>> R postJson(String url, JsonObject data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
-        HttpRequest request = HttpRequest.newBuilder()
+
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .POST(BodyPublishers.ofString(gson.toJson(data)))
                 .header("Content-Type", "application/json")
-                .header("User-Agent", this.userAgent)
-                .build();
+                .header("User-Agent", this.userAgent);
+        HttpRequest request;
+        if (apiKey != null) {
+            request = requestBuilder
+                    .header("Authorization", "Bearer "+apiKey)
+                    .header("Accept", "application/json").build();
+        } else {
+            request = requestBuilder.build();
+        }
 
         HttpResponse<String> response = null;
         try {
@@ -103,31 +115,32 @@ public class Java11RequestHandler extends RequestHandler {
         return wrapResponse(response, clazz, constructor);
     }
 
-    @Override
     public <T, R extends MineSkinResponse<T>> R postFormDataFile(String url, String key, String filename, InputStream in, Map<String, String> data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+
         String boundary = "mineskin-" + System.currentTimeMillis();
-        StringBuilder formBody = new StringBuilder();
-
-        for (Map.Entry<String, String> entry : data.entrySet()) {
-            formBody.append("--").append(boundary).append("\r\n")
-                    .append("Content-Disposition: form-data; name=\"").append(entry.getKey()).append("\"\r\n\r\n")
-                    .append(entry.getValue()).append("\r\n");
-        }
-
-        formBody.append("--").append(boundary).append("\r\n")
-                .append("Content-Disposition: form-data; name=\"").append(key).append("\"; filename=\"").append(filename).append("\"\r\n")
-                .append("Content-Type: ").append(Files.probeContentType(Files.createTempFile(null, null))).append("\r\n\r\n");
-
-        byte[] fileBytes = in.readAllBytes();
-        formBody.append(new String(fileBytes))
-                .append("\r\n--").append(boundary).append("--\r\n");
-
-        HttpRequest request = HttpRequest.newBuilder()
+        byte[] fileContent = in.readAllBytes();
+        String bodyBuilder = "--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"" + key + "\"; filename=\"" + filename + "\"\r\n" +
+                "Content-Type: application/octet-stream\r\n\r\n";
+        byte[] bodyStart = bodyBuilder.getBytes();
+        byte[] boundaryEnd = ("\r\n--" + boundary + "--\r\n").getBytes();
+        byte[] bodyString = new byte[bodyStart.length + fileContent.length + boundaryEnd.length];
+        System.arraycopy(bodyStart, 0, bodyString, 0, bodyStart.length);
+        System.arraycopy(fileContent, 0, bodyString, bodyStart.length, fileContent.length);
+        System.arraycopy(boundaryEnd, 0, bodyString, bodyStart.length + fileContent.length, boundaryEnd.length);
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .POST(BodyPublishers.ofString(formBody.toString()))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bodyString))
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                .header("User-Agent", this.userAgent)
-                .build();
+                .header("User-Agent", this.userAgent);
+        HttpRequest request;
+        if (apiKey != null) {
+            request = requestBuilder
+                    .header("Authorization", "Bearer "+apiKey)
+                    .header("Accept", "application/json").build();
+        } else {
+            request = requestBuilder.build();
+        }
 
         HttpResponse<String> response = null;
         try {
