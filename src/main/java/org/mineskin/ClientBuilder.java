@@ -1,13 +1,11 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
-import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
-import org.mineskin.request.RequestHandlerImpl;
+import org.mineskin.request.RequestHandler;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
 
 public class ClientBuilder {
 
@@ -26,7 +24,7 @@ public class ClientBuilder {
      * Create a new ClientBuilder
      */
     public static ClientBuilder create() {
-        return new ClientBuilder().requestHandler(RequestHandlerImpl::new);
+        return new ClientBuilder().requestHandler(RequestHandler::new);
     }
 
     /**
