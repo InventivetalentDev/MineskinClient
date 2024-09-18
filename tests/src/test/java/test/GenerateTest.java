@@ -4,12 +4,7 @@ import org.junit.Before;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mineskin.ApacheRequestHandler;
-import org.mineskin.GenerateOptions;
-import org.mineskin.ImageUtil;
-import org.mineskin.JsoupRequestHandler;
-import org.mineskin.MineSkinClient;
-import org.mineskin.MineSkinClientImpl;
+import org.mineskin.*;
 import org.mineskin.data.GeneratedSkin;
 import org.mineskin.data.Skin;
 import org.mineskin.data.Visibility;
@@ -44,6 +39,12 @@ public class GenerateTest {
             .apiKey(System.getenv("MINESKIN_API_KEY"))
             .generateExecutor(EXECUTOR)
             .build();
+    private static final MineSkinClient JAVA11 = MineSkinClient.builder()
+            .requestHandler(Java11RequestHandler::new)
+            .userAgent("MineSkinClient-Java11/Tests")
+            .apiKey(System.getenv("MINESKIN_API_KEY"))
+            .generateExecutor(EXECUTOR)
+            .build();
 
     static {
         MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
@@ -60,7 +61,8 @@ public class GenerateTest {
     private static Stream<Arguments> clients() {
         return Stream.of(
                 Arguments.of(APACHE),
-                Arguments.of(JSOUP)
+                Arguments.of(JSOUP),
+                Arguments.of(JAVA11)
         );
     }
 
