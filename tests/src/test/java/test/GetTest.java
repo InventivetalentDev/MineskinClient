@@ -3,10 +3,7 @@ package test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mineskin.ApacheRequestHandler;
-import org.mineskin.JsoupRequestHandler;
-import org.mineskin.MineSkinClient;
-import org.mineskin.MineSkinClientImpl;
+import org.mineskin.*;
 import org.mineskin.data.ExistingSkin;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.response.GetSkinResponse;
@@ -30,6 +27,11 @@ public class GetTest {
             .userAgent("MineSkinClient-Jsoup/Tests")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
             .build();
+    private static final MineSkinClient JAVA11 = MineSkinClient.builder()
+            .requestHandler(Java11RequestHandler::new)
+            .userAgent("MineSkinClient-Java11/Tests")
+            .apiKey(System.getenv("MINESKIN_API_KEY"))
+            .build();
     static {
         MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
         ConsoleHandler handler = new ConsoleHandler();
@@ -40,7 +42,8 @@ public class GetTest {
     private static Stream<Arguments> clients() {
         return Stream.of(
                 Arguments.of(APACHE),
-                Arguments.of(JSOUP)
+                Arguments.of(JSOUP),
+                Arguments.of(JAVA11)
         );
     }
 
