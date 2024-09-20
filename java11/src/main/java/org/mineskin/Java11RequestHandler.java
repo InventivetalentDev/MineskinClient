@@ -82,7 +82,7 @@ public class Java11RequestHandler extends RequestHandler {
         } else {
             request = requestBuilder.build();
         }
-        HttpResponse<String> response = null;
+        HttpResponse<String> response;
         try {
             response = this.httpClient.send(request, BodyHandlers.ofString());
         } catch (InterruptedException e) {
@@ -108,7 +108,7 @@ public class Java11RequestHandler extends RequestHandler {
             request = requestBuilder.build();
         }
 
-        HttpResponse<String> response = null;
+        HttpResponse<String> response;
         try {
             response = this.httpClient.send(request, BodyHandlers.ofString());
         } catch (InterruptedException e) {
@@ -157,7 +157,7 @@ public class Java11RequestHandler extends RequestHandler {
             request = requestBuilder.build();
         }
 
-        HttpResponse<String> response = null;
+        HttpResponse<String> response;
         try {
             response = this.httpClient.send(request, BodyHandlers.ofString());
         } catch (InterruptedException e) {
