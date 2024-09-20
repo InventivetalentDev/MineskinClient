@@ -60,18 +60,24 @@ public class Example {
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client-jsoup</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.1.0-SNAPSHOT</version>
     </dependency>
 <!-- alternatively use apache httpcommons -->
 <!--    <dependency>-->
 <!--        <groupId>org.mineskin</groupId>-->
 <!--        <artifactId>java-client-apache</artifactId>-->
-<!--        <version>2.0.0-SNAPSHOT</version>-->
+<!--        <version>2.1.0-SNAPSHOT</version>-->
+<!--    </dependency>-->
+<!-- ... or java 11 HttpRequest -->
+<!--    <dependency>-->
+<!--        <groupId>org.mineskin</groupId>-->
+<!--        <artifactId>java-client-java11</artifactId>-->
+<!--        <version>2.1.0-SNAPSHOT</version>-->
 <!--    </dependency>-->
 </depencies>
 ```
