@@ -77,7 +77,7 @@ public class Java11RequestHandler extends RequestHandler {
         HttpRequest request;
         if (apiKey != null) {
             request = requestBuilder
-                    .header("Authorization", "Bearer "+apiKey)
+                    .header("Authorization", "Bearer " + apiKey)
                     .header("Accept", "application/json").build();
         } else {
             request = requestBuilder.build();
@@ -102,7 +102,7 @@ public class Java11RequestHandler extends RequestHandler {
         HttpRequest request;
         if (apiKey != null) {
             request = requestBuilder
-                    .header("Authorization", "Bearer "+apiKey)
+                    .header("Authorization", "Bearer " + apiKey)
                     .header("Accept", "application/json").build();
         } else {
             request = requestBuilder.build();
@@ -121,16 +121,28 @@ public class Java11RequestHandler extends RequestHandler {
         MineSkinClientImpl.LOGGER.fine("POST " + url);
 
         String boundary = "mineskin-" + System.currentTimeMillis();
+        StringBuilder bodyBuilder = new StringBuilder();
+
+        // add form fields
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            bodyBuilder.append("--").append(boundary).append("\r\n")
+                    .append("Content-Disposition: form-data; name=\"").append(entry.getKey()).append("\"\r\n\r\n")
+                    .append(entry.getValue()).append("\r\n");
+        }
+
+        // add file
         byte[] fileContent = in.readAllBytes();
-        String bodyBuilder = "--" + boundary + "\r\n" +
-                "Content-Disposition: form-data; name=\"" + key + "\"; filename=\"" + filename + "\"\r\n" +
-                "Content-Type: image/png\r\n\r\n";
-        byte[] bodyStart = bodyBuilder.getBytes();
+        bodyBuilder.append("--").append(boundary).append("\r\n")
+                .append("Content-Disposition: form-data; name=\"").append(key)
+                .append("\"; filename=\"").append(filename).append("\"\r\n")
+                .append("Content-Type: image/png\r\n\r\n");
+        byte[] bodyStart = bodyBuilder.toString().getBytes();
         byte[] boundaryEnd = ("\r\n--" + boundary + "--\r\n").getBytes();
         byte[] bodyString = new byte[bodyStart.length + fileContent.length + boundaryEnd.length];
         System.arraycopy(bodyStart, 0, bodyString, 0, bodyStart.length);
         System.arraycopy(fileContent, 0, bodyString, bodyStart.length, fileContent.length);
         System.arraycopy(boundaryEnd, 0, bodyString, bodyStart.length + fileContent.length, boundaryEnd.length);
+
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(bodyString))
@@ -139,7 +151,7 @@ public class Java11RequestHandler extends RequestHandler {
         HttpRequest request;
         if (apiKey != null) {
             request = requestBuilder
-                    .header("Authorization", "Bearer "+apiKey)
+                    .header("Authorization", "Bearer " + apiKey)
                     .header("Accept", "application/json").build();
         } else {
             request = requestBuilder.build();
