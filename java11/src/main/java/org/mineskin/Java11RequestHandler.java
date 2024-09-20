@@ -124,7 +124,7 @@ public class Java11RequestHandler extends RequestHandler {
         byte[] fileContent = in.readAllBytes();
         String bodyBuilder = "--" + boundary + "\r\n" +
                 "Content-Disposition: form-data; name=\"" + key + "\"; filename=\"" + filename + "\"\r\n" +
-                "Content-Type: application/octet-stream\r\n\r\n";
+                "Content-Type: image/png\r\n\r\n";
         byte[] bodyStart = bodyBuilder.getBytes();
         byte[] boundaryEnd = ("\r\n--" + boundary + "--\r\n").getBytes();
         byte[] bodyString = new byte[bodyStart.length + fileContent.length + boundaryEnd.length];
