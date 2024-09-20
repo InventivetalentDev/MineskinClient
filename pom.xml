@@ -6,7 +6,7 @@
 
     <groupId>org.mineskin</groupId>
     <artifactId>client-parent</artifactId>
-    <version>PARENT</version>
+    <version>PARENT-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
         <module>core</module>

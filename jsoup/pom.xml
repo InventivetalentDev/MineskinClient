@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.mineskin</groupId>
         <artifactId>client-parent</artifactId>
-        <version>PARENT</version>
+        <version>PARENT-SNAPSHOT</version>
     </parent>
 
     <artifactId>java-client-jsoup</artifactId>
