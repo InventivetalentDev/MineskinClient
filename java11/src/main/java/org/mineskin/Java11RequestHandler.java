@@ -68,6 +68,7 @@ public class Java11RequestHandler extends RequestHandler {
     }
 
     public <T, R extends MineSkinResponse<T>> R getJson(String url, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        MineSkinClientImpl.LOGGER.fine("GET " + url);
 
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -91,6 +92,7 @@ public class Java11RequestHandler extends RequestHandler {
     }
 
     public <T, R extends MineSkinResponse<T>> R postJson(String url, JsonObject data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        MineSkinClientImpl.LOGGER.fine("POST " + url);
 
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -116,6 +118,7 @@ public class Java11RequestHandler extends RequestHandler {
     }
 
     public <T, R extends MineSkinResponse<T>> R postFormDataFile(String url, String key, String filename, InputStream in, Map<String, String> data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        MineSkinClientImpl.LOGGER.fine("POST " + url);
 
         String boundary = "mineskin-" + System.currentTimeMillis();
         byte[] fileContent = in.readAllBytes();
