@@ -118,7 +118,7 @@ public class MineSkinClientImpl implements MineSkinClient {
      * Generates skin data by uploading an image (with default options)
      */
     public CompletableFuture<GenerateResponse> generateUpload(InputStream is) {
-        return generateUpload(is, GenerateOptions.create(), null);
+        return generateUpload(is, GenerateOptions.create(), "skin.png");
     }
 
     /**
