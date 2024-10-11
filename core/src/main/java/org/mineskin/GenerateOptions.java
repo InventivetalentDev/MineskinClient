@@ -45,7 +45,7 @@ public class GenerateOptions {
             json.addProperty("variant", variant.getName());
         }
         if (visibility != null) {
-            json.addProperty("visibility", visibility.getCode());
+            json.addProperty("visibility", visibility.getName());
         }
         return json;
     }
@@ -64,7 +64,7 @@ public class GenerateOptions {
             data.put("variant", variant.getName());
         }
         if (visibility != null) {
-            data.put("visibility", String.valueOf(visibility.getCode()));
+            data.put("visibility", visibility.getName());
         }
     }
 

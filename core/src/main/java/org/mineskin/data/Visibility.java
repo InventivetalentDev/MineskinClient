@@ -2,16 +2,17 @@ package org.mineskin.data;
 
 public enum Visibility {
 
-	PUBLIC(0),
-	UNLISTED(1);
+	PUBLIC("public"),
+	UNLISTED("unlisted"),
+	PRIVATE("private");
 
-	private final int code;
+	private final String name;
 
-	Visibility(int code) {
-		this.code = code;
+	Visibility(String name) {
+		this.name = name;
 	}
 
-	public int getCode() {
-		return code;
+	public String getName() {
+		return name;
 	}
 }
