@@ -34,7 +34,7 @@ public class MineSkinClientImpl implements MineSkinClient {
 
     public static final Logger LOGGER = Logger.getLogger(MineSkinClientImpl.class.getName());
 
-    private static final String API_BASE = "https://api.mineskin.org";
+    private static final String API_BASE = "https://toast.api.mineskin.org";
     private static final String GENERATE_BASE = API_BASE + "/generate";
     private static final String GET_BASE = API_BASE + "/get";
 
@@ -148,7 +148,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                 delayUntilNext();
 
                 Map<String, String> data = options.toMap();
-                GenerateResponse res = requestHandler.postFormDataFile(GENERATE_BASE + "/upload", "file", fileName, is, data, GeneratedSkin.class, GenerateResponse::new);
+                GenerateResponse res = requestHandler.postFormDataFile(GENERATE_BASE + "/upload?v2=true", "file", fileName, is, data, GeneratedSkin.class, GenerateResponse::new);
                 handleResponse(res);
                 return res;
             } catch (IOException e) {

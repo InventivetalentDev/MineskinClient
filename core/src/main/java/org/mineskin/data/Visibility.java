@@ -1,7 +1,6 @@
 package org.mineskin.data;
 
 public enum Visibility {
-
 	PUBLIC("public"),
 	UNLISTED("unlisted"),
 	PRIVATE("private");

@@ -1,5 +1,6 @@
 package org.mineskin.data;
 
+@Deprecated
 public final class ExistingSkin extends BaseSkin {
 
     public ExistingSkin(
@@ -7,7 +8,7 @@ public final class ExistingSkin extends BaseSkin {
             String name,
             SkinData data,
             long timestamp,
-            int visibility,
+            Visibility visibility,
             int views
     ) {
       super(uuid, name, data, timestamp, visibility, views);

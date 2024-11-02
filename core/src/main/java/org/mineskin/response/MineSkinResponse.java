@@ -2,20 +2,20 @@ package org.mineskin.response;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.mineskin.data.CodeAndMessage;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class MineSkinResponse<T> {
 
     private final boolean success;
     private final int status;
 
-    private final String message;
-    private final String error;
-    private final List<String> warnings;
+    private final List<CodeAndMessage> messages;
+    private final List<CodeAndMessage> errors;
+    private final List<CodeAndMessage> warnings;
 
     private final String server;
     private final String breadcrumb;
@@ -27,7 +27,8 @@ public class MineSkinResponse<T> {
             int status,
             Map<String, String> headers,
             JsonObject rawBody,
-            Gson gson, Class<T> clazz
+            Gson gson,
+            String primaryField, Class<T> clazz
     ) {
         if (rawBody.has("success")) {
             this.success = rawBody.get("success").getAsBoolean();
@@ -35,16 +36,19 @@ public class MineSkinResponse<T> {
             this.success = status == 200;
         }
         this.status = status;
-        this.message = rawBody.has("message") ? rawBody.get("message").getAsString() : null;
-        this.error = rawBody.has("error") ? rawBody.get("error").getAsString() : null;
-        this.warnings = rawBody.has("warnings") ? gson.fromJson(rawBody.get("warnings"), List.class) : Collections.emptyList();
+        this.messages = rawBody.has("messages") ? gson.fromJson(rawBody.get("messages"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
+        this.warnings = rawBody.has("warnings") ? gson.fromJson(rawBody.get("warnings"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
+        this.errors = rawBody.has("errors") ? gson.fromJson(rawBody.get("errors"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
 
-
-        this.server = headers.get("x-mineskin-server");
-        this.breadcrumb = headers.get("x-mineskin-breadcrumb");
+        this.server = headers.get("mineskin-server");
+        this.breadcrumb = headers.get("mineskin-breadcrumb");
 
         this.rawBody = rawBody;
-        this.body = gson.fromJson(rawBody, clazz);
+        this.body = parseBody(rawBody, gson, primaryField, clazz);
+    }
+
+    protected T parseBody(JsonObject rawBody, Gson gson, String primaryField, Class<T> clazz) {
+        return gson.fromJson(rawBody.get(primaryField), clazz);
     }
 
     public boolean isSuccess() {
@@ -55,19 +59,15 @@ public class MineSkinResponse<T> {
         return status;
     }
 
-    public Optional<String> getMessage() {
-        return Optional.ofNullable(message);
+    public List<CodeAndMessage> getMessages() {
+        return messages;
     }
 
-    public Optional<String> getError() {
-        return Optional.ofNullable(error);
+    public List<CodeAndMessage> getErrors() {
+        return errors;
     }
 
-    public String getMessageOrError() {
-        return success ? message : error;
-    }
-
-    public List<String> getWarnings() {
+    public List<CodeAndMessage> getWarnings() {
         return warnings;
     }
 

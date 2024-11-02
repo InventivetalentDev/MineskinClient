@@ -8,6 +8,7 @@ import org.mineskin.data.Skin;
 
 import java.util.Map;
 
+@Deprecated
 public class GenerateResponse extends MineSkinResponse<GeneratedSkin> {
 
     private final DelayInfo delayInfo;

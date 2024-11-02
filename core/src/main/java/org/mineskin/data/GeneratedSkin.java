@@ -1,5 +1,6 @@
 package org.mineskin.data;
 
+@Deprecated
 public class GeneratedSkin extends BaseSkin {
 
     private final boolean duplicate;
@@ -9,7 +10,7 @@ public class GeneratedSkin extends BaseSkin {
             String name,
             SkinData data,
             long timestamp,
-            int visibility,
+            Visibility visibility,
             int views,
             boolean duplicate
     ) {

@@ -2,13 +2,14 @@ package org.mineskin.data;
 
 import java.util.Objects;
 
+@Deprecated
 public class BaseSkin implements Skin {
 
     private final String uuid;
     private final String name;
     private final SkinData data;
     private final long timestamp;
-    private final int visibility;
+    private final Visibility visibility;
     private final int views;
 
     public BaseSkin(
@@ -16,7 +17,7 @@ public class BaseSkin implements Skin {
             String name,
             SkinData data,
             long timestamp,
-            int visibility,
+            Visibility visibility,
             int views
     ) {
         this.uuid = uuid;
@@ -48,7 +49,7 @@ public class BaseSkin implements Skin {
     }
 
     @Override
-    public int visibility() {
+    public Visibility visibility() {
         return visibility;
     }
 

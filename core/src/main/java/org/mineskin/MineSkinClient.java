@@ -1,7 +1,7 @@
 package org.mineskin;
 
 import org.mineskin.response.GenerateResponse;
-import org.mineskin.response.GetSkinResponse;
+import org.mineskin.response.SkinResponse;
 
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -25,12 +25,12 @@ public interface MineSkinClient {
     /**
      * Get an existing skin by UUID (Note: not the player's UUID)
      */
-    CompletableFuture<GetSkinResponse> getSkinByUuid(UUID uuid);
+    CompletableFuture<SkinResponse> getSkinByUuid(UUID uuid);
 
     /**
      * Get an existing skin by UUID (Note: not the player's UUID)
      */
-    CompletableFuture<GetSkinResponse> getSkinByUuid(String uuid);
+    CompletableFuture<SkinResponse> getSkinByUuid(String uuid);
 
     /**
      * Generates skin data from an URL
