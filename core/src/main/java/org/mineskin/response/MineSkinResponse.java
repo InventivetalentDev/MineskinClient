@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.mineskin.data.CodeAndMessage;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class MineSkinResponse<T> {
 
@@ -18,6 +15,7 @@ public class MineSkinResponse<T> {
     private final List<CodeAndMessage> errors;
     private final List<CodeAndMessage> warnings;
 
+    private final Map<String, String> headers;
     private final String server;
     private final String breadcrumb;
 
@@ -41,6 +39,9 @@ public class MineSkinResponse<T> {
         this.warnings = rawBody.has("warnings") ? gson.fromJson(rawBody.get("warnings"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
         this.errors = rawBody.has("errors") ? gson.fromJson(rawBody.get("errors"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
 
+        this.headers = headers.entrySet().stream()
+                .filter(e -> e.getKey().startsWith("mineskin-") || e.getKey().startsWith("x-mineskin-"))
+                .collect(HashMap::new, (m, e) -> m.put(e.getKey().toLowerCase(), e.getValue()), HashMap::putAll);
         this.server = headers.get("mineskin-server");
         this.breadcrumb = headers.get("mineskin-breadcrumb");
 
@@ -94,11 +95,12 @@ public class MineSkinResponse<T> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()+ "{" +
+        return getClass().getSimpleName() + "{" +
                 "success=" + success +
                 ", status=" + status +
                 ", server='" + server + '\'' +
                 ", breadcrumb='" + breadcrumb + '\'' +
+                ", headers=" + headers +
                 "}\n" +
                 rawBody;
     }
