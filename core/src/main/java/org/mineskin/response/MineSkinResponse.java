@@ -7,6 +7,7 @@ import org.mineskin.data.CodeAndMessage;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class MineSkinResponse<T> {
 
@@ -65,6 +66,14 @@ public class MineSkinResponse<T> {
 
     public List<CodeAndMessage> getErrors() {
         return errors;
+    }
+
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
+    public Optional<CodeAndMessage> getFirstError() {
+        return errors.stream().findFirst();
     }
 
     public List<CodeAndMessage> getWarnings() {

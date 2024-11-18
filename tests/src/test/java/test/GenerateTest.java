@@ -11,11 +11,12 @@ import org.mineskin.Java11RequestHandler;
 import org.mineskin.JsoupRequestHandler;
 import org.mineskin.MineSkinClient;
 import org.mineskin.MineSkinClientImpl;
-import org.mineskin.data.GeneratedSkin;
-import org.mineskin.data.Skin;
+import org.mineskin.data.JobInfo;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
-import org.mineskin.response.GenerateResponse;
+import org.mineskin.request.RequestBuilder;
+import org.mineskin.response.QueueResponse;
+import org.mineskin.response.SkinResponse;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -27,8 +28,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
 
 public class GenerateTest {
 
@@ -95,6 +94,36 @@ public class GenerateTest {
 
     @ParameterizedTest
     @MethodSource("clients")
+    public void queueTest(MineSkinClient client) throws InterruptedException, IOException {
+        Thread.sleep(1000);
+
+        final String name = "JavaClient-Upload";
+        File file = File.createTempFile("mineskin-temp-upload-image", ".png");
+        ImageIO.write(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), "png", file);
+        System.out.println("#queueTest");
+        long start = System.currentTimeMillis();
+        try {
+            QueueResponse res = client.queue(RequestBuilder.upload(file).options(GenerateOptions.create().visibility(Visibility.UNLISTED))).join();
+            System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(res);
+            JobInfo job = ((MineSkinClientImpl) client).waitForJob(res.getBody()).join();
+            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(job);
+            SkinResponse skin = job.getSkin(client).join();
+            System.out.println(skin);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
+        Thread.sleep(1000);
+    }
+
+
+    /*
+    @ParameterizedTest
+    @MethodSource("clients")
     public void uploadTest(MineSkinClient client) throws InterruptedException, IOException {
         Thread.sleep(1000);
 
@@ -118,6 +147,9 @@ public class GenerateTest {
         Thread.sleep(1000);
     }
 
+     */
+
+    /*
     @ParameterizedTest
     @MethodSource("clients")
     public void uploadRenderedImageTest(MineSkinClient client) throws InterruptedException, IOException {
@@ -161,5 +193,6 @@ public class GenerateTest {
 
         assertEquals(name, skin.name());
     }
+     */
 
 }

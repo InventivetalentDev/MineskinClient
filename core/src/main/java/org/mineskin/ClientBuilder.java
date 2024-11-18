@@ -6,6 +6,7 @@ import org.mineskin.request.RequestHandlerConstructor;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 
 public class ClientBuilder {
@@ -16,6 +17,7 @@ public class ClientBuilder {
     private Gson gson = new Gson();
     private Executor getExecutor = null;
     private Executor generateExecutor = null;
+    private ScheduledExecutorService jobCheckScheduler = null;
     private RequestHandlerConstructor requestHandlerConstructor = null;
 
     private ClientBuilder() {
@@ -77,6 +79,14 @@ public class ClientBuilder {
     }
 
     /**
+     * Set the ScheduledExecutorService for checking job status
+     */
+    public ClientBuilder jobCheckScheduler(ScheduledExecutorService scheduledExecutor) {
+        this.jobCheckScheduler = scheduledExecutor;
+        return this;
+    }
+
+    /**
      * Set the constructor for the RequestHandler
      */
     public ClientBuilder requestHandler(RequestHandlerConstructor requestHandlerConstructor) {
@@ -113,8 +123,16 @@ public class ClientBuilder {
             });
         }
 
+        if (jobCheckScheduler == null) {
+            jobCheckScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread thread = new Thread(r);
+                thread.setName("MineSkinClient/jobCheck");
+                return thread;
+            });
+        }
+
         RequestHandler requestHandler = requestHandlerConstructor.construct(userAgent, apiKey, timeout, gson);
-        return new MineSkinClientImpl(requestHandler, generateExecutor, getExecutor);
+        return new MineSkinClientImpl(requestHandler, generateExecutor, getExecutor, jobCheckScheduler);
     }
 
 }

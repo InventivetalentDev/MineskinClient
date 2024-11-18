@@ -1,6 +1,11 @@
 package org.mineskin.data;
 
+import org.mineskin.MineSkinClient;
+import org.mineskin.exception.MineskinException;
+import org.mineskin.response.SkinResponse;
+
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class JobInfo {
 
@@ -32,4 +37,20 @@ public class JobInfo {
         return Optional.ofNullable(result);
     }
 
+    public CompletableFuture<SkinResponse> getSkin(MineSkinClient client) {
+        if (result == null) {
+            throw new MineskinException("Job is not completed yet");
+        }
+        return client.getSkin(result);
+    }
+
+    @Override
+    public String toString() {
+        return "JobInfo{" +
+                "id='" + id + '\'' +
+                ", status=" + status +
+                ", timestamp=" + timestamp +
+                ", result='" + result + '\'' +
+                '}';
+    }
 }

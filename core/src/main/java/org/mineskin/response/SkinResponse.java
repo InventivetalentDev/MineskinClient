@@ -8,8 +8,8 @@ import java.util.Map;
 
 public class SkinResponse extends MineSkinResponse<SkinInfo> {
 
-    public SkinResponse(int status, Map<String, String> headers, JsonObject rawBody, Gson gson) {
-        super(status, headers, rawBody, gson, "skin", SkinInfo.class);
+    public SkinResponse(int status, Map<String, String> headers, JsonObject rawBody, Gson gson, Class<SkinInfo> clazz) {
+        super(status, headers, rawBody, gson, "skin", clazz);
     }
 
 }
