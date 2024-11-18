@@ -42,7 +42,7 @@ public class JobChecker {
             future.completeExceptionally(new MineskinException("Max attempts reached"));
             return;
         }
-        client.getJobStatus(jobInfo)
+        client.queue().get(jobInfo)
                 .thenAccept(response -> {
                     JobInfo info = response.getBody();
                     if (info != null) {

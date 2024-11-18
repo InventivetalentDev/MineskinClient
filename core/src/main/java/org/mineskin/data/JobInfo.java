@@ -37,11 +37,15 @@ public class JobInfo {
         return Optional.ofNullable(result);
     }
 
+    public CompletableFuture<JobInfo> waitForCompletion(MineSkinClient client) {
+        return client.queue().waitForCompletion(this);
+    }
+
     public CompletableFuture<SkinResponse> getSkin(MineSkinClient client) {
         if (result == null) {
             throw new MineskinException("Job is not completed yet");
         }
-        return client.getSkin(result);
+        return client.skins().get(result);
     }
 
     @Override

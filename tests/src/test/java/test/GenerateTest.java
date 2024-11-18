@@ -4,13 +4,7 @@ import org.junit.Before;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mineskin.ApacheRequestHandler;
-import org.mineskin.GenerateOptions;
-import org.mineskin.ImageUtil;
-import org.mineskin.Java11RequestHandler;
-import org.mineskin.JsoupRequestHandler;
-import org.mineskin.MineSkinClient;
-import org.mineskin.MineSkinClientImpl;
+import org.mineskin.*;
 import org.mineskin.data.JobInfo;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
@@ -103,10 +97,10 @@ public class GenerateTest {
         System.out.println("#queueTest");
         long start = System.currentTimeMillis();
         try {
-            QueueResponse res = client.queue(RequestBuilder.upload(file).options(GenerateOptions.create().visibility(Visibility.UNLISTED))).join();
+            QueueResponse res = client.queue().submit(RequestBuilder.upload(file).visibility(Visibility.UNLISTED)).join();
             System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(res);
-            JobInfo job = ((MineSkinClientImpl) client).waitForJob(res.getBody()).join();
+            JobInfo job = res.getBody().waitForCompletion(client).join();
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(job);
             SkinResponse skin = job.getSkin(client).join();

@@ -8,9 +8,9 @@ import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestBuilder;
 import org.mineskin.request.RequestHandler;
-import org.mineskin.request.upload.UploadRequestBuilder;
-import org.mineskin.request.url.UrlRequestBuilder;
-import org.mineskin.request.user.UserRequestBuilder;
+import org.mineskin.request.UploadRequestBuilder;
+import org.mineskin.request.UrlRequestBuilder;
+import org.mineskin.request.UserRequestBuilder;
 import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.JobResponse;
 import org.mineskin.response.MineSkinResponse;
@@ -47,12 +47,20 @@ public class MineSkinClientImpl implements MineSkinClient {
     private final ScheduledExecutorService jobCheckScheduler;
 
     private final RequestHandler requestHandler;
+    private final RequestQueue generateQueue;
+    private final RequestQueue getQueue;
+
+    private final QueueClient queueClient = new QueueClientImpl();
+    private final SkinsClient skinsClient = new SkinsClientImpl();
 
     public MineSkinClientImpl(RequestHandler requestHandler, Executor generateExecutor, Executor getExecutor, ScheduledExecutorService jobCheckScheduler) {
         this.requestHandler = checkNotNull(requestHandler);
         this.generateExecutor = checkNotNull(generateExecutor);
         this.getExecutor = checkNotNull(getExecutor);
         this.jobCheckScheduler = checkNotNull(jobCheckScheduler);
+
+        this.generateQueue = new RequestQueue(this.jobCheckScheduler, 200);
+        this.getQueue = new RequestQueue(this.jobCheckScheduler, 100);
     }
 
     public long getNextRequest() {
@@ -62,115 +70,15 @@ public class MineSkinClientImpl implements MineSkinClient {
 
     /////
 
-    /**
-     * Get an existing skin by UUID (Note: not the player's UUID)
-     */
-    public CompletableFuture<SkinResponse> getSkin(UUID uuid) {
-        checkNotNull(uuid);
-        return getSkin(uuid.toString());
-    }
 
-    /**
-     * Get an existing skin by UUID (Note: not the player's UUID)
-     */
-    public CompletableFuture<SkinResponse> getSkin(String uuid) {
-        checkNotNull(uuid);
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return requestHandler.getJson(API_BASE + "/v2/skins/" + uuid, SkinInfo.class, SkinResponse::new);
-            } catch (IOException e) {
-                throw new MineskinException(e);
-            }
-        }, getExecutor);
+    @Override
+    public QueueClient queue() {
+        return queueClient;
     }
 
     @Override
-    public CompletableFuture<QueueResponse> queue(RequestBuilder builder) {
-        if (builder instanceof UploadRequestBuilder uploadRequestBuilder) {
-            return queueUpload(uploadRequestBuilder);
-        } else if (builder instanceof UrlRequestBuilder urlRequestBuilder) {
-            return queueUrl(urlRequestBuilder);
-        } else if (builder instanceof UserRequestBuilder userRequestBuilder) {
-            return queueUser(userRequestBuilder);
-        }
-        throw new MineskinException("Unknown request builder type: " + builder.getClass());
-    }
-
-    CompletableFuture<QueueResponse> queueUpload(UploadRequestBuilder builder) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Map<String, String> data = builder.getOptions().toMap();
-                UploadSource source = builder.getUploadSource();
-                checkNotNull(source);
-                try (InputStream inputStream = source.getInputStream()) {
-                    QueueResponse res = requestHandler.postFormDataFile(API_BASE + "/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponse::new);
-                    handleResponse(res);
-                    return res;
-                }
-            } catch (IOException e) {
-                throw new MineskinException(e);
-            } catch (MineSkinRequestException e) {
-                handleResponse(e.getResponse());
-                throw e;
-            }
-        }, generateExecutor);
-    }
-
-    CompletableFuture<QueueResponse> queueUrl(UrlRequestBuilder builder) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                JsonObject body = builder.getOptions().toJson();
-                URL url = builder.getUrl();
-                checkNotNull(url);
-                body.addProperty("url", url.toString());
-                QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
-                handleResponse(res);
-                return res;
-            } catch (IOException e) {
-                throw new MineskinException(e);
-            } catch (MineSkinRequestException e) {
-                handleResponse(e.getResponse());
-                throw e;
-            }
-        }, generateExecutor);
-    }
-
-    CompletableFuture<QueueResponse> queueUser(UserRequestBuilder builder) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                JsonObject body = builder.getOptions().toJson();
-                UUID uuid = builder.getUuid();
-                checkNotNull(uuid);
-                body.addProperty("user", uuid.toString());
-                QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
-                handleResponse(res);
-                return res;
-            } catch (IOException e) {
-                throw new MineskinException(e);
-            } catch (MineSkinRequestException e) {
-                handleResponse(e.getResponse());
-                throw e;
-            }
-        }, generateExecutor);
-    }
-
-    @Override
-    public CompletableFuture<JobResponse> getJobStatus(JobInfo jobInfo) {
-        return getJobStatus(jobInfo.id());
-    }
-
-    public CompletableFuture<JobResponse> getJobStatus(String id) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return requestHandler.getJson(API_BASE + "/v2/queue/" + id, JobInfo.class, JobResponse::new);
-            } catch (IOException e) {
-                throw new MineskinException(e);
-            }
-        }, getExecutor);
-    }
-
-    public CompletableFuture<JobInfo> waitForJob(JobInfo jobInfo) {
-        return new JobChecker(this, jobInfo, jobCheckScheduler, 10, 2, 1).check();
+    public SkinsClient skins() {
+        return skinsClient;
     }
 
     private void handleResponse(MineSkinResponse<?> response) {
@@ -217,6 +125,130 @@ public class MineSkinClientImpl implements MineSkinClient {
             }
             return v;
         });
+    }
+
+    class QueueClientImpl implements QueueClient {
+
+        @Override
+        public CompletableFuture<QueueResponse> submit(RequestBuilder builder) {
+            if (builder instanceof UploadRequestBuilder uploadRequestBuilder) {
+                return queueUpload(uploadRequestBuilder);
+            } else if (builder instanceof UrlRequestBuilder urlRequestBuilder) {
+                return queueUrl(urlRequestBuilder);
+            } else if (builder instanceof UserRequestBuilder userRequestBuilder) {
+                return queueUser(userRequestBuilder);
+            }
+            throw new MineskinException("Unknown request builder type: " + builder.getClass());
+        }
+
+        CompletableFuture<QueueResponse> queueUpload(UploadRequestBuilder builder) {
+            return generateQueue.submit(() -> {
+                try {
+                    Map<String, String> data = builder.options().toMap();
+                    UploadSource source = builder.getUploadSource();
+                    checkNotNull(source);
+                    try (InputStream inputStream = source.getInputStream()) {
+                        QueueResponse res = requestHandler.postFormDataFile(API_BASE + "/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponse::new);
+                        handleResponse(res);
+                        return res;
+                    }
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                } catch (MineSkinRequestException e) {
+                    handleResponse(e.getResponse());
+                    throw e;
+                }
+            }, generateExecutor);
+        }
+
+        CompletableFuture<QueueResponse> queueUrl(UrlRequestBuilder builder) {
+            return generateQueue.submit(() -> {
+                try {
+                    JsonObject body = builder.options().toJson();
+                    URL url = builder.getUrl();
+                    checkNotNull(url);
+                    body.addProperty("url", url.toString());
+                    QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
+                    handleResponse(res);
+                    return res;
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                } catch (MineSkinRequestException e) {
+                    handleResponse(e.getResponse());
+                    throw e;
+                }
+            }, generateExecutor);
+        }
+
+        CompletableFuture<QueueResponse> queueUser(UserRequestBuilder builder) {
+            return generateQueue.submit(() -> {
+                try {
+                    JsonObject body = builder.options().toJson();
+                    UUID uuid = builder.getUuid();
+                    checkNotNull(uuid);
+                    body.addProperty("user", uuid.toString());
+                    QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
+                    handleResponse(res);
+                    return res;
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                } catch (MineSkinRequestException e) {
+                    handleResponse(e.getResponse());
+                    throw e;
+                }
+            }, generateExecutor);
+        }
+
+        @Override
+        public CompletableFuture<JobResponse> get(JobInfo jobInfo) {
+            return get(jobInfo.id());
+        }
+
+        @Override
+        public CompletableFuture<JobResponse> get(String id) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return requestHandler.getJson(API_BASE + "/v2/queue/" + id, JobInfo.class, JobResponse::new);
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                }
+            }, getExecutor);
+        }
+
+        @Override
+        public CompletableFuture<JobInfo> waitForCompletion(JobInfo jobInfo) {
+            return new JobChecker(MineSkinClientImpl.this, jobInfo, jobCheckScheduler, 10, 2, 1).check();
+        }
+
+
+    }
+
+    class SkinsClientImpl implements SkinsClient {
+
+        /**
+         * Get an existing skin by UUID (Note: not the player's UUID)
+         */
+        @Override
+        public CompletableFuture<SkinResponse> get(UUID uuid) {
+            checkNotNull(uuid);
+            return get(uuid.toString());
+        }
+
+        /**
+         * Get an existing skin by UUID (Note: not the player's UUID)
+         */
+        @Override
+        public CompletableFuture<SkinResponse> get(String uuid) {
+            checkNotNull(uuid);
+            return getQueue.submit(() -> {
+                try {
+                    return requestHandler.getJson(API_BASE + "/v2/skins/" + uuid, SkinInfo.class, SkinResponse::new);
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                }
+            }, getExecutor);
+        }
+
     }
 
 }

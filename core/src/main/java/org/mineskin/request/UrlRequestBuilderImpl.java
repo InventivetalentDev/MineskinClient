@@ -1,7 +1,4 @@
-package org.mineskin.request.url;
-
-import org.mineskin.GenerateOptions;
-import org.mineskin.request.AbstractRequestBuilder;
+package org.mineskin.request;
 
 import java.net.URL;
 
@@ -18,9 +15,4 @@ public class UrlRequestBuilderImpl extends AbstractRequestBuilder implements Url
         return url;
     }
 
-    @Override
-    public UrlRequestBuilder options(GenerateOptions options) {
-        super.options(options);
-        return this;
-    }
 }

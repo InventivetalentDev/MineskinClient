@@ -1,7 +1,4 @@
-package org.mineskin.request.user;
-
-import org.mineskin.GenerateOptions;
-import org.mineskin.request.AbstractRequestBuilder;
+package org.mineskin.request;
 
 import java.util.UUID;
 
@@ -18,9 +15,4 @@ public class UserRequestBuilderImpl extends AbstractRequestBuilder implements Us
         return uuid;
     }
 
-    @Override
-    public UserRequestBuilder options(GenerateOptions options) {
-        super.options(options);
-        return this;
-    }
 }

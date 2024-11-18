@@ -9,10 +9,12 @@ import java.util.concurrent.CompletableFuture;
 
 public interface QueueClient {
 
-    CompletableFuture<QueueResponse> queue(RequestBuilder builder);
+    CompletableFuture<QueueResponse> submit(RequestBuilder builder);
 
-    CompletableFuture<JobResponse> getJobStatus(JobInfo jobInfo);
+    CompletableFuture<JobResponse> get(JobInfo jobInfo);
 
-    CompletableFuture<JobResponse> getJobStatus(String id);
+    CompletableFuture<JobResponse> get(String id);
+
+    CompletableFuture<JobInfo> waitForCompletion(JobInfo jobInfo);
 
 }
