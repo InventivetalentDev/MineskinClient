@@ -6,9 +6,9 @@ import org.mineskin.data.JobInfo;
 
 import java.util.Map;
 
-public class QueueResponse extends MineSkinResponse<JobInfo> {
+public class JobResponse extends MineSkinResponse<JobInfo> {
 
-    public QueueResponse(int status, Map<String, String> headers, JsonObject rawBody, Gson gson, Class<JobInfo> clazz) {
+    public JobResponse(int status, Map<String, String> headers, JsonObject rawBody, Gson gson, Class<JobInfo> clazz) {
         super(status, headers, rawBody, gson, "job", clazz);
     }
 

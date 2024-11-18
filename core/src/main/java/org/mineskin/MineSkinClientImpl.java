@@ -4,12 +4,20 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.DelayInfo;
 import org.mineskin.data.ExistingSkin;
 import org.mineskin.data.GeneratedSkin;
+import org.mineskin.data.JobInfo;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.request.RequestBuilder;
 import org.mineskin.request.RequestHandler;
+import org.mineskin.request.UploadRequestBuilder;
+import org.mineskin.request.UrlRequestBuilder;
+import org.mineskin.request.UserRequestBuilder;
+import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.GenerateResponse;
 import org.mineskin.response.GetSkinResponse;
+import org.mineskin.response.JobResponse;
 import org.mineskin.response.MineSkinResponse;
+import org.mineskin.response.QueueResponse;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
@@ -20,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +43,7 @@ public class MineSkinClientImpl implements MineSkinClient {
 
     public static final Logger LOGGER = Logger.getLogger(MineSkinClientImpl.class.getName());
 
-    private static final String API_BASE = "https://toast.api.mineskin.org";
+    private static final String API_BASE = "https://toast.api.mineskin.org"; //FIXME
     private static final String GENERATE_BASE = API_BASE + "/generate";
     private static final String GET_BASE = API_BASE + "/get";
 
@@ -75,6 +84,91 @@ public class MineSkinClientImpl implements MineSkinClient {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return requestHandler.getJson(GET_BASE + "/uuid/" + uuid, ExistingSkin.class, GetSkinResponse::new);
+            } catch (IOException e) {
+                throw new MineskinException(e);
+            }
+        }, getExecutor);
+    }
+
+    @Override
+    public CompletableFuture<QueueResponse> queue(RequestBuilder builder) {
+        if (builder instanceof UploadRequestBuilder uploadRequestBuilder) {
+            return queueUpload(uploadRequestBuilder);
+        } else if (builder instanceof UrlRequestBuilder urlRequestBuilder) {
+            return queueUrl(urlRequestBuilder);
+        } else if (builder instanceof UserRequestBuilder userRequestBuilder) {
+            return queueUser(userRequestBuilder);
+        }
+        throw new MineskinException("Unknown request builder type: " + builder.getClass());
+    }
+
+    CompletableFuture<QueueResponse> queueUpload(UploadRequestBuilder builder) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Map<String, String> data = builder.getOptions().toMap();
+                UploadSource source = builder.getUploadSource();
+                checkNotNull(source);
+                try (InputStream inputStream = source.getInputStream()) {
+                    QueueResponse res = requestHandler.postFormDataFile(API_BASE + "/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponse::new);
+                    handleResponse(res);
+                    return res;
+                }
+            } catch (IOException e) {
+                throw new MineskinException(e);
+            } catch (MineSkinRequestException e) {
+                handleResponse(e.getResponse());
+                throw e;
+            }
+        }, generateExecutor);
+    }
+
+    CompletableFuture<QueueResponse> queueUrl(UrlRequestBuilder builder) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                JsonObject body = builder.getOptions().toJson();
+                URL url = builder.getUrl();
+                checkNotNull(url);
+                body.addProperty("url", url.toString());
+                QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
+                handleResponse(res);
+                return res;
+            } catch (IOException e) {
+                throw new MineskinException(e);
+            } catch (MineSkinRequestException e) {
+                handleResponse(e.getResponse());
+                throw e;
+            }
+        }, generateExecutor);
+    }
+
+    CompletableFuture<QueueResponse> queueUser(UserRequestBuilder builder) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                JsonObject body = builder.getOptions().toJson();
+                UUID uuid = builder.getUuid();
+                checkNotNull(uuid);
+                body.addProperty("user", uuid.toString());
+                QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
+                handleResponse(res);
+                return res;
+            } catch (IOException e) {
+                throw new MineskinException(e);
+            } catch (MineSkinRequestException e) {
+                handleResponse(e.getResponse());
+                throw e;
+            }
+        }, generateExecutor);
+    }
+
+    @Override
+    public CompletableFuture<JobResponse> getJobStatus(JobInfo jobInfo) {
+        return getJobStatus(jobInfo.id());
+    }
+
+    public CompletableFuture<JobResponse> getJobStatus(String id) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return requestHandler.getJson(API_BASE + "/v2/queue/" + id, JobInfo.class, JobResponse::new);
             } catch (IOException e) {
                 throw new MineskinException(e);
             }
