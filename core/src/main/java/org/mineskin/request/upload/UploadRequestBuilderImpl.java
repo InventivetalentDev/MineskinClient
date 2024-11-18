@@ -1,7 +1,8 @@
-package org.mineskin.request;
+package org.mineskin.request.upload;
 
 import org.mineskin.GenerateOptions;
 import org.mineskin.MineSkinClient;
+import org.mineskin.request.AbstractRequestBuilder;
 import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.QueueResponse;
 

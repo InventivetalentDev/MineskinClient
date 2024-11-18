@@ -2,6 +2,7 @@ package org.mineskin.request;
 
 import org.mineskin.GenerateOptions;
 import org.mineskin.request.source.UploadSource;
+import org.mineskin.request.upload.UploadRequestBuilderImpl;
 
 import java.awt.image.RenderedImage;
 import java.io.File;

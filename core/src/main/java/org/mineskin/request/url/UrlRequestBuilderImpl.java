@@ -1,6 +1,7 @@
-package org.mineskin.request;
+package org.mineskin.request.url;
 
 import org.mineskin.GenerateOptions;
+import org.mineskin.request.AbstractRequestBuilder;
 
 import java.net.URL;
 
