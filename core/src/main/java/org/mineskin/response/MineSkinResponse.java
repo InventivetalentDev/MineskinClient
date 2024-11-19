@@ -113,6 +113,9 @@ public class MineSkinResponse<T> {
                 ", server='" + server + '\'' +
                 ", breadcrumb='" + breadcrumb + '\'' +
                 ", headers=" + headers +
+                ", messages=" + messages +
+                ", errors=" + errors +
+                ", warnings=" + warnings +
                 "}\n" +
                 rawBody;
     }
