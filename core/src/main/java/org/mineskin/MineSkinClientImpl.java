@@ -1,8 +1,8 @@
 package org.mineskin;
 
 import com.google.gson.JsonObject;
-import org.mineskin.data.DelayInfo;
 import org.mineskin.data.JobInfo;
+import org.mineskin.data.RateLimitInfo;
 import org.mineskin.data.SkinInfo;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
@@ -23,10 +23,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,15 +32,8 @@ public class MineSkinClientImpl implements MineSkinClient {
     public static final Logger LOGGER = Logger.getLogger(MineSkinClient.class.getName());
 
     private static final String API_BASE = "https://toast.api.mineskin.org"; //FIXME
-    private static final String GENERATE_BASE = API_BASE + "/generate";
-    private static final String GET_BASE = API_BASE + "/get";
 
-    private static final Map<String, AtomicLong> DELAYS = new ConcurrentHashMap<>();
-    private static final Map<String, AtomicLong> NEXT_REQUESTS = new ConcurrentHashMap<>();
-
-    private final Executor generateExecutor;
-    private final Executor getExecutor;
-    private final ScheduledExecutorService jobCheckScheduler;
+    private final RequestExecutors executors;
 
     private final RequestHandler requestHandler;
     private final RequestQueue generateQueue;
@@ -53,19 +42,12 @@ public class MineSkinClientImpl implements MineSkinClient {
     private final QueueClient queueClient = new QueueClientImpl();
     private final SkinsClient skinsClient = new SkinsClientImpl();
 
-    public MineSkinClientImpl(RequestHandler requestHandler, Executor generateExecutor, Executor getExecutor, ScheduledExecutorService jobCheckScheduler) {
+    public MineSkinClientImpl(RequestHandler requestHandler, RequestExecutors executors) {
         this.requestHandler = checkNotNull(requestHandler);
-        this.generateExecutor = checkNotNull(generateExecutor);
-        this.getExecutor = checkNotNull(getExecutor);
-        this.jobCheckScheduler = checkNotNull(jobCheckScheduler);
+        this.executors = checkNotNull(executors);
 
-        this.generateQueue = new RequestQueue(this.jobCheckScheduler, 200);
-        this.getQueue = new RequestQueue(this.jobCheckScheduler, 100);
-    }
-
-    public long getNextRequest() {
-        String key = String.valueOf(requestHandler.getApiKey());
-        return NEXT_REQUESTS.computeIfAbsent(key, k -> new AtomicLong(0)).get();
+        this.generateQueue = new RequestQueue(executors.generateRequestScheduler(), 200, 1);
+        this.getQueue = new RequestQueue(executors.jobCheckScheduler(), 100, 5);
     }
 
     /////
@@ -79,52 +61,6 @@ public class MineSkinClientImpl implements MineSkinClient {
     @Override
     public SkinsClient skins() {
         return skinsClient;
-    }
-
-    private void handleResponse(MineSkinResponse<?> response) {
-//        if (response instanceof GenerateResponse generateResponse) {
-//            handleDelayInfo(generateResponse.getDelayInfo());
-//        }
-    }
-
-    private void delayUntilNext() {
-        if (System.currentTimeMillis() < getNextRequest()) {
-            long delay = (getNextRequest() - System.currentTimeMillis());
-            try {
-                LOGGER.finer("Waiting for " + delay + "ms until next request");
-                Thread.sleep(delay + 1);
-            } catch (InterruptedException e) {
-                throw new MineskinException("Interrupted while waiting for next request", e);
-            }
-        }
-    }
-
-    private void handleDelayInfo(DelayInfo delayInfo) {
-        if (delayInfo == null) {
-            return;
-        }
-        String key = String.valueOf(requestHandler.getApiKey());
-        AtomicLong delay = DELAYS.compute(key, (k, v) -> {
-            if (v == null) {
-                v = new AtomicLong(0);
-            }
-            if (delayInfo.millis() > v.get()) {
-                // use the highest delay
-                v.set(delayInfo.millis());
-            }
-            return v;
-        });
-        LOGGER.finer("Delaying next request by " + delay.get() + "ms");
-        NEXT_REQUESTS.compute(key, (k, v) -> {
-            if (v == null) {
-                v = new AtomicLong(System.currentTimeMillis());
-            }
-            long next = System.currentTimeMillis() + delay.get() + 1;
-            if (next > v.get()) {
-                v.set(next);
-            }
-            return v;
-        });
     }
 
     class QueueClientImpl implements QueueClient {
@@ -149,16 +85,16 @@ public class MineSkinClientImpl implements MineSkinClient {
                     checkNotNull(source);
                     try (InputStream inputStream = source.getInputStream()) {
                         QueueResponse res = requestHandler.postFormDataFile(API_BASE + "/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponse::new);
-                        handleResponse(res);
+                        handleGenerateResponse(res);
                         return res;
                     }
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 } catch (MineSkinRequestException e) {
-                    handleResponse(e.getResponse());
+                    handleGenerateResponse(e.getResponse());
                     throw e;
                 }
-            }, generateExecutor);
+            }, executors.generateExecutor());
         }
 
         CompletableFuture<QueueResponse> queueUrl(UrlRequestBuilder builder) {
@@ -169,15 +105,15 @@ public class MineSkinClientImpl implements MineSkinClient {
                     checkNotNull(url);
                     body.addProperty("url", url.toString());
                     QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
-                    handleResponse(res);
+                    handleGenerateResponse(res);
                     return res;
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 } catch (MineSkinRequestException e) {
-                    handleResponse(e.getResponse());
+                    handleGenerateResponse(e.getResponse());
                     throw e;
                 }
-            }, generateExecutor);
+            }, executors.generateExecutor());
         }
 
         CompletableFuture<QueueResponse> queueUser(UserRequestBuilder builder) {
@@ -188,15 +124,25 @@ public class MineSkinClientImpl implements MineSkinClient {
                     checkNotNull(uuid);
                     body.addProperty("user", uuid.toString());
                     QueueResponse res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponse::new);
-                    handleResponse(res);
+                    handleGenerateResponse(res);
                     return res;
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 } catch (MineSkinRequestException e) {
-                    handleResponse(e.getResponse());
+                    handleGenerateResponse(e.getResponse());
                     throw e;
                 }
-            }, generateExecutor);
+            }, executors.generateExecutor());
+        }
+
+        private void handleGenerateResponse(MineSkinResponse<?> response0) {
+            if (!(response0 instanceof QueueResponse response)) return;
+            RateLimitInfo rateLimit = response.getRateLimit();
+            if (rateLimit == null) return;
+            long nextRelative = rateLimit.next().relative();
+            if (nextRelative > 0) {
+                generateQueue.setNextRequest(Math.max(generateQueue.getNextRequest(), System.currentTimeMillis() + nextRelative));
+            }
         }
 
         @Override
@@ -212,12 +158,12 @@ public class MineSkinClientImpl implements MineSkinClient {
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 }
-            }, getExecutor);
+            }, executors.getExecutor());
         }
 
         @Override
         public CompletableFuture<JobInfo> waitForCompletion(JobInfo jobInfo) {
-            return new JobChecker(MineSkinClientImpl.this, jobInfo, jobCheckScheduler, 10, 2, 1).check();
+            return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
         }
 
 
@@ -246,7 +192,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 }
-            }, getExecutor);
+            }, executors.getExecutor());
         }
 
     }

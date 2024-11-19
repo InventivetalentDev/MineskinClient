@@ -17,6 +17,8 @@ public class ClientBuilder {
     private Gson gson = new Gson();
     private Executor getExecutor = null;
     private Executor generateExecutor = null;
+    private ScheduledExecutorService generateRequestScheduler = null;
+    private ScheduledExecutorService getRequestScheduler = null;
     private ScheduledExecutorService jobCheckScheduler = null;
     private RequestHandlerConstructor requestHandlerConstructor = null;
 
@@ -79,12 +81,29 @@ public class ClientBuilder {
     }
 
     /**
+     * Set the ScheduledExecutorService for submitting queue jobs
+     */
+    public ClientBuilder generateRequestScheduler(ScheduledExecutorService scheduledExecutor) {
+        this.generateRequestScheduler = scheduledExecutor;
+        return this;
+    }
+
+    /**
+     * Set the ScheduledExecutorService for get requests, e.g. getting skins
+     */
+    public ClientBuilder getRequestScheduler(ScheduledExecutorService scheduledExecutor) {
+        this.getRequestScheduler = scheduledExecutor;
+        return this;
+    }
+
+    /**
      * Set the ScheduledExecutorService for checking job status
      */
     public ClientBuilder jobCheckScheduler(ScheduledExecutorService scheduledExecutor) {
         this.jobCheckScheduler = scheduledExecutor;
         return this;
     }
+
 
     /**
      * Set the constructor for the RequestHandler
@@ -123,16 +142,23 @@ public class ClientBuilder {
             });
         }
 
-        if (jobCheckScheduler == null) {
-            jobCheckScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        if (generateRequestScheduler == null) {
+            generateRequestScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread thread = new Thread(r);
-                thread.setName("MineSkinClient/jobCheck");
+                thread.setName("MineSkinClient/scheduler");
                 return thread;
             });
         }
+        if (getRequestScheduler == null) {
+            getRequestScheduler = generateRequestScheduler;
+        }
+        if (jobCheckScheduler == null) {
+            jobCheckScheduler = generateRequestScheduler;
+        }
 
         RequestHandler requestHandler = requestHandlerConstructor.construct(userAgent, apiKey, timeout, gson);
-        return new MineSkinClientImpl(requestHandler, generateExecutor, getExecutor, jobCheckScheduler);
+        RequestExecutors executors = new RequestExecutors(getExecutor, generateExecutor, generateRequestScheduler, getRequestScheduler, jobCheckScheduler);
+        return new MineSkinClientImpl(requestHandler, executors);
     }
 
 }
