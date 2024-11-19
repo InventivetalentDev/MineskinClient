@@ -6,8 +6,14 @@ public interface MineSkinClient {
         return ClientBuilder.create();
     }
 
+    /**
+     * Get the queue client
+     */
     QueueClient queue();
 
+    /**
+     * Get the skins client
+     */
     SkinsClient skins();
 
 }

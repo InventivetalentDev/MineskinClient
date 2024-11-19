@@ -66,15 +66,15 @@ public class MineSkinClientImpl implements MineSkinClient {
     class QueueClientImpl implements QueueClient {
 
         @Override
-        public CompletableFuture<QueueResponse> submit(GenerateRequest builder) {
-            if (builder instanceof UploadRequestBuilder uploadRequestBuilder) {
+        public CompletableFuture<QueueResponse> submit(GenerateRequest request) {
+            if (request instanceof UploadRequestBuilder uploadRequestBuilder) {
                 return queueUpload(uploadRequestBuilder);
-            } else if (builder instanceof UrlRequestBuilder urlRequestBuilder) {
+            } else if (request instanceof UrlRequestBuilder urlRequestBuilder) {
                 return queueUrl(urlRequestBuilder);
-            } else if (builder instanceof UserRequestBuilder userRequestBuilder) {
+            } else if (request instanceof UserRequestBuilder userRequestBuilder) {
                 return queueUser(userRequestBuilder);
             }
-            throw new MineskinException("Unknown request builder type: " + builder.getClass());
+            throw new MineskinException("Unknown request builder type: " + request.getClass());
         }
 
         CompletableFuture<QueueResponse> queueUpload(UploadRequestBuilder builder) {
