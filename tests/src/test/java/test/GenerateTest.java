@@ -1,6 +1,7 @@
 package test;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -10,6 +11,7 @@ import org.mineskin.Java11RequestHandler;
 import org.mineskin.JsoupRequestHandler;
 import org.mineskin.MineSkinClient;
 import org.mineskin.MineSkinClientImpl;
+import org.mineskin.data.JobInfo;
 import org.mineskin.data.Skin;
 import org.mineskin.data.SkinInfo;
 import org.mineskin.data.Visibility;
@@ -19,8 +21,11 @@ import org.mineskin.response.JobResponse;
 import org.mineskin.response.QueueResponse;
 
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -29,8 +34,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class GenerateTest {
 
@@ -97,7 +101,7 @@ public class GenerateTest {
 
     @ParameterizedTest
     @MethodSource("clients")
-    public void queueTest(MineSkinClient client) throws InterruptedException, IOException {
+    public void singleQueueUploadTest(MineSkinClient client) throws InterruptedException, IOException {
         Thread.sleep(1000);
 
         File file = File.createTempFile("mineskin-temp-upload-image", ".png");
@@ -116,9 +120,6 @@ public class GenerateTest {
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
-//            SkinResponse skinResponse = jobResponse.getSkin(client).join();
-//            System.out.println(skinResponse);
-//            System.out.println(skinResponse.getBody());
             validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
@@ -129,6 +130,90 @@ public class GenerateTest {
         Thread.sleep(1000);
     }
 
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void singleQueueUrlTest(MineSkinClient client) throws InterruptedException, IOException {
+        Thread.sleep(1000);
+
+        long start = System.currentTimeMillis();
+        try {
+            String name = "mskjva-url-" + ThreadLocalRandom.current().nextInt(1000);
+            GenerateRequest request = GenerateRequest.url("https://api.mineskin.org/random-image?t=" + System.currentTimeMillis())
+                    .visibility(Visibility.UNLISTED)
+                    .name(name);
+            QueueResponse res = client.queue().submit(request).join();
+            System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(res);
+            JobResponse jobResponse = res.getBody().waitForCompletion(client).join();
+            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(jobResponse);
+            SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
+            validateSkin(skinInfo, name);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
+        Thread.sleep(1000);
+    }
+
+
+    @Test
+    public void multiQueueRenderedUploadTest() throws InterruptedException, IOException {
+        MineSkinClient client = JAVA11;
+        int count = 5;
+        Thread.sleep(1000);
+
+        long start = System.currentTimeMillis();
+        Map<String,JobInfo> jobs = new HashMap<>();
+        for (int i = 0; i < count; i++) {
+            try {
+                Thread.sleep(100);
+                String name = "mskjva-upl-" + i + "-" + ThreadLocalRandom.current().nextInt(1000);
+                BufferedImage image = ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32);
+                GenerateRequest request = GenerateRequest.upload(image)
+                        .visibility(Visibility.UNLISTED)
+                        .name(name);
+                QueueResponse res = client.queue().submit(request).join();
+                System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+                System.out.println(res);
+                jobs.put(name, res.getBody());
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof MineSkinRequestException req) {
+                    System.out.println(req.getResponse());
+                }
+                throw e;
+            }
+        }
+        boolean jobsPending = true;
+        while (jobsPending) {
+            jobsPending = false;
+            for (JobInfo jobInfo : jobs.values()) {
+                JobResponse jobResponse = client.queue().get(jobInfo).join();
+                if (jobResponse.getJob().status().isPending()) {
+                    jobsPending = true;
+                    break;
+                }
+            }
+            Thread.sleep(1000);
+        }
+
+        for (Map.Entry<String, JobInfo> entry : jobs.entrySet()) {
+            String name = entry.getKey();
+            JobInfo jobInfo = entry.getValue();
+            JobResponse jobResponse = client.queue().get(jobInfo).join();
+            assertTrue(jobResponse.getJob().status().isDone());
+            assertTrue(jobResponse.getSkin().isPresent());
+            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(jobResponse);
+            SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
+            validateSkin(skinInfo, name);
+        }
+
+
+        Thread.sleep(1000);
+    }
 
     /*
     @ParameterizedTest

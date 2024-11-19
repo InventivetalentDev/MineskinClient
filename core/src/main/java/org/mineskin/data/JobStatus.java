@@ -13,4 +13,14 @@ public enum JobStatus {
     FAILED,
     @SerializedName("unknown")
     UNKNOWN,
+    ;
+
+    public boolean isPending() {
+        return this == WAITING || this == PROCESSING;
+    }
+
+    public boolean isDone() {
+        return this == COMPLETED || this == FAILED;
+    }
+
 }
