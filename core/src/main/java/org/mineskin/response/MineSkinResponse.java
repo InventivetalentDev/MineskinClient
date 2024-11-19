@@ -65,6 +65,10 @@ public class MineSkinResponse<T> {
         return messages;
     }
 
+    public Optional<CodeAndMessage> getFirstMessage() {
+        return messages.stream().findFirst();
+    }
+
     public List<CodeAndMessage> getErrors() {
         return errors;
     }
@@ -77,8 +81,16 @@ public class MineSkinResponse<T> {
         return errors.stream().findFirst();
     }
 
+    public Optional<CodeAndMessage> getErrorOrMessage() {
+        return getFirstError().or(this::getFirstMessage);
+    }
+
     public List<CodeAndMessage> getWarnings() {
         return warnings;
+    }
+
+    public Optional<CodeAndMessage> getFirstWarning() {
+        return warnings.stream().findFirst();
     }
 
     public String getServer() {

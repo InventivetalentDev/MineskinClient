@@ -1,9 +1,17 @@
 package org.mineskin;
 
+import org.mineskin.data.CodeAndMessage;
+import org.mineskin.data.JobInfo;
+import org.mineskin.data.Skin;
 import org.mineskin.data.Visibility;
+import org.mineskin.exception.MineSkinRequestException;
+import org.mineskin.request.GenerateRequest;
+import org.mineskin.response.MineSkinResponse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 public class Example {
 
@@ -18,32 +26,49 @@ public class Example {
                 .name("My Skin")
                 .visibility(Visibility.PUBLIC);
         File file = new File("skin.png");
-//        CLIENT.generateUpload(file, options)
-//                .thenAccept(response -> {
-//                    // get generated skin
-//                    Skin skin = response.getSkin();
-//                    System.out.println(skin);
-//                })
-//                .exceptionally(throwable -> {
-//                    throwable.printStackTrace();
-//                    if (throwable instanceof CompletionException completionException) {
-//                        throwable = completionException.getCause();
-//                    }
-//
-//                    if (throwable instanceof MineSkinRequestException requestException) {
-//                        // get error details
-//                        MineSkinResponse response = requestException.getResponse();
-//                        System.out.println(response.getMessageOrError());
-//                    }
-//                    return null;
-//                });
-//
-//        CLIENT.getSkinByUuid("skinuuid")
-//                .thenAccept(response -> {
-//                    // get existing skin
-//                    Skin skin = response.getSkin();
-//                    System.out.println(skin);
-//                });
+        GenerateRequest request = GenerateRequest.upload(file)
+                .name("My Skin")
+                .visibility(Visibility.PUBLIC);
+        // submit queue request
+        CLIENT.queue().submit(request)
+                .thenCompose(queueResponse -> {
+                    JobInfo job = queueResponse.getJob();
+                    // wait for job completion
+                    return job.waitForCompletion(CLIENT);
+                })
+                .thenCompose(jobResponse -> {
+                    // get skin from job or load it from the API
+                    return jobResponse.getOrLoadSkin(CLIENT);
+                })
+                .thenAccept(skinInfo -> {
+                    // do stuff with the skin
+                    System.out.println(skinInfo);
+                    System.out.println(skinInfo.texture().data().value());
+                    System.out.println(skinInfo.texture().data().signature());
+                })
+                .exceptionally(throwable -> {
+                    throwable.printStackTrace();
+                    if (throwable instanceof CompletionException completionException) {
+                        throwable = completionException.getCause();
+                    }
+
+                    if (throwable instanceof MineSkinRequestException requestException) {
+                        // get error details
+                        MineSkinResponse<?> response = requestException.getResponse();
+                        Optional<CodeAndMessage> detailsOptional = response.getErrorOrMessage();
+                        detailsOptional.ifPresent(details -> {
+                            System.out.println(details.code() + ": " + details.message());
+                        });
+                    }
+                    return null;
+                });
+
+        CLIENT.skins().get("skinuuid")
+                .thenAccept(response -> {
+                    // get existing skin
+                    Skin skin = response.getSkin();
+                    System.out.println(skin);
+                });
     }
 
 }
