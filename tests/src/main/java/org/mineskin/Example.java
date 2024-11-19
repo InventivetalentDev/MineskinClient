@@ -17,14 +17,11 @@ public class Example {
 
     private static final MineSkinClient CLIENT = MineSkinClient.builder()
             .requestHandler(JsoupRequestHandler::new)
-            .userAgent("MyMineSkinApp/v1.0")
-            .apiKey("your-api-key")
+            .userAgent("MyMineSkinApp/v1.0") // TODO: update this with your own user agent
+            .apiKey("your-api-key") // TODO: update this with your own API key (https://account.mineskin.org/keys)
             .build();
 
     public static void main(String[] args) throws FileNotFoundException {
-        GenerateOptions options = GenerateOptions.create()
-                .name("My Skin")
-                .visibility(Visibility.PUBLIC);
         File file = new File("skin.png");
         GenerateRequest request = GenerateRequest.upload(file)
                 .name("My Skin")
