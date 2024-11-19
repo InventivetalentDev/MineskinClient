@@ -19,6 +19,10 @@ public class QueueResponse extends MineSkinResponse<JobInfo> {
         this.usage = gson.fromJson(rawBody.get("usage"), UsageInfo.class);
     }
 
+    public JobInfo getJob() {
+        return getBody();
+    }
+
     public RateLimitInfo getRateLimit() {
         return rateLimit;
     }

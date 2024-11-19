@@ -3,6 +3,7 @@ package org.mineskin;
 import org.mineskin.data.JobInfo;
 import org.mineskin.data.JobStatus;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.response.JobResponse;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,11 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class JobChecker {
 
-    private MineSkinClient client;
+    private final MineSkinClient client;
     private JobInfo jobInfo;
 
-    private ScheduledExecutorService executor;
-    private CompletableFuture<JobInfo> future;
+    private final ScheduledExecutorService executor;
+    private CompletableFuture<JobResponse> future;
 
     private final AtomicInteger attempts = new AtomicInteger(0);
     private final int maxAttempts;
@@ -31,7 +32,7 @@ public class JobChecker {
         this.interval = interval;
     }
 
-    public CompletableFuture<JobInfo> check() {
+    public CompletableFuture<JobResponse> check() {
         future = new CompletableFuture<>();
         executor.schedule(this::checkJob, initialDelay, TimeUnit.SECONDS);
         return future;
@@ -49,7 +50,7 @@ public class JobChecker {
                         jobInfo = info;
                     }
                     if (jobInfo.status() == JobStatus.COMPLETED || jobInfo.status() == JobStatus.FAILED) {
-                        future.complete(jobInfo);
+                        future.complete(response);
                     } else {
                         executor.schedule(this::checkJob, interval, TimeUnit.SECONDS);
                     }

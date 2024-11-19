@@ -4,13 +4,19 @@ import org.junit.Before;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mineskin.*;
-import org.mineskin.data.JobInfo;
+import org.mineskin.ApacheRequestHandler;
+import org.mineskin.ImageUtil;
+import org.mineskin.Java11RequestHandler;
+import org.mineskin.JsoupRequestHandler;
+import org.mineskin.MineSkinClient;
+import org.mineskin.MineSkinClientImpl;
+import org.mineskin.data.Skin;
+import org.mineskin.data.SkinInfo;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
-import org.mineskin.request.RequestBuilder;
+import org.mineskin.request.GenerateRequest;
+import org.mineskin.response.JobResponse;
 import org.mineskin.response.QueueResponse;
-import org.mineskin.response.SkinResponse;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -22,6 +28,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class GenerateTest {
 
@@ -91,20 +100,26 @@ public class GenerateTest {
     public void queueTest(MineSkinClient client) throws InterruptedException, IOException {
         Thread.sleep(1000);
 
-        final String name = "JavaClient-Upload";
         File file = File.createTempFile("mineskin-temp-upload-image", ".png");
         ImageIO.write(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), "png", file);
         System.out.println("#queueTest");
         long start = System.currentTimeMillis();
         try {
-            QueueResponse res = client.queue().submit(RequestBuilder.upload(file).visibility(Visibility.UNLISTED)).join();
+            String name = "mskjva-upl-" + ThreadLocalRandom.current().nextInt(1000);
+            GenerateRequest request = GenerateRequest.upload(file)
+                    .visibility(Visibility.UNLISTED)
+                    .name(name);
+            QueueResponse res = client.queue().submit(request).join();
             System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(res);
-            JobInfo job = res.getBody().waitForCompletion(client).join();
+            JobResponse jobResponse = res.getBody().waitForCompletion(client).join();
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(job);
-            SkinResponse skin = job.getSkin(client).join();
-            System.out.println(skin);
+            System.out.println(jobResponse);
+            SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
+//            SkinResponse skinResponse = jobResponse.getSkin(client).join();
+//            System.out.println(skinResponse);
+//            System.out.println(skinResponse.getBody());
+            validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
                 System.out.println(req.getResponse());
@@ -178,15 +193,16 @@ public class GenerateTest {
 //            }
 //        }
 //    }
-
+*/
     void validateSkin(Skin skin, String name) {
         assertNotNull(skin);
-        assertTrue(skin instanceof GeneratedSkin);
-        assertNotNull(skin.data());
-        assertNotNull(skin.data().texture());
+        assertNotNull(skin.texture());
+        assertNotNull(skin.texture().data());
+        assertNotNull(skin.texture().data().value());
+        assertNotNull(skin.texture().data().signature());
 
         assertEquals(name, skin.name());
     }
-     */
+
 
 }

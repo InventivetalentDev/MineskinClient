@@ -13,7 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.UUID;
 
-public interface RequestBuilder {
+public interface GenerateRequest {
 
     ///
 
@@ -59,13 +59,13 @@ public interface RequestBuilder {
 
     ///
 
-    RequestBuilder options(GenerateOptions options);
+    GenerateRequest options(GenerateOptions options);
 
-    RequestBuilder visibility(Visibility visibility);
+    GenerateRequest visibility(Visibility visibility);
 
-    RequestBuilder variant(Variant variant);
+    GenerateRequest variant(Variant variant);
 
-    RequestBuilder name(String name);
+    GenerateRequest name(String name);
 
     GenerateOptions options();
 

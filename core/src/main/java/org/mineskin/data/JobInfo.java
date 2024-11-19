@@ -2,6 +2,7 @@ package org.mineskin.data;
 
 import org.mineskin.MineSkinClient;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.response.JobResponse;
 import org.mineskin.response.SkinResponse;
 
 import java.util.Optional;
@@ -37,7 +38,7 @@ public class JobInfo {
         return Optional.ofNullable(result);
     }
 
-    public CompletableFuture<JobInfo> waitForCompletion(MineSkinClient client) {
+    public CompletableFuture<JobResponse> waitForCompletion(MineSkinClient client) {
         return client.queue().waitForCompletion(this);
     }
 

@@ -4,30 +4,30 @@ import org.mineskin.GenerateOptions;
 import org.mineskin.data.Variant;
 import org.mineskin.data.Visibility;
 
-public abstract class AbstractRequestBuilder implements RequestBuilder {
+public abstract class AbstractRequestBuilder implements GenerateRequest {
 
     private GenerateOptions options = GenerateOptions.create();
 
     @Override
-    public RequestBuilder options(GenerateOptions options) {
+    public GenerateRequest options(GenerateOptions options) {
         this.options = options;
         return this;
     }
 
     @Override
-    public RequestBuilder visibility(Visibility visibility) {
+    public GenerateRequest visibility(Visibility visibility) {
         this.options.visibility(visibility);
         return this;
     }
 
     @Override
-    public RequestBuilder variant(Variant variant) {
+    public GenerateRequest variant(Variant variant) {
         this.options.variant(variant);
         return this;
     }
 
     @Override
-    public RequestBuilder name(String name) {
+    public GenerateRequest name(String name) {
         this.options.name(name);
         return this;
     }

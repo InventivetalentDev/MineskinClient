@@ -12,4 +12,8 @@ public class SkinResponse extends MineSkinResponse<SkinInfo> {
         super(status, headers, rawBody, gson, "skin", clazz);
     }
 
+    public SkinInfo getSkin() {
+        return getBody();
+    }
+
 }

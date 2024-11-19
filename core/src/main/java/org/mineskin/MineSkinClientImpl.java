@@ -6,7 +6,7 @@ import org.mineskin.data.RateLimitInfo;
 import org.mineskin.data.SkinInfo;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
-import org.mineskin.request.RequestBuilder;
+import org.mineskin.request.GenerateRequest;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.UploadRequestBuilder;
 import org.mineskin.request.UrlRequestBuilder;
@@ -66,7 +66,7 @@ public class MineSkinClientImpl implements MineSkinClient {
     class QueueClientImpl implements QueueClient {
 
         @Override
-        public CompletableFuture<QueueResponse> submit(RequestBuilder builder) {
+        public CompletableFuture<QueueResponse> submit(GenerateRequest builder) {
             if (builder instanceof UploadRequestBuilder uploadRequestBuilder) {
                 return queueUpload(uploadRequestBuilder);
             } else if (builder instanceof UrlRequestBuilder urlRequestBuilder) {
@@ -162,7 +162,7 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         @Override
-        public CompletableFuture<JobInfo> waitForCompletion(JobInfo jobInfo) {
+        public CompletableFuture<JobResponse> waitForCompletion(JobInfo jobInfo) {
             return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
         }
 
