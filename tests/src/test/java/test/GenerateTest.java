@@ -34,7 +34,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GenerateTest {
 
@@ -166,7 +166,7 @@ public class GenerateTest {
         Thread.sleep(1000);
 
         long start = System.currentTimeMillis();
-        Map<String,JobInfo> jobs = new HashMap<>();
+        Map<String, JobInfo> jobs = new HashMap<>();
         for (int i = 0; i < count; i++) {
             try {
                 Thread.sleep(100);
@@ -186,16 +186,16 @@ public class GenerateTest {
                 throw e;
             }
         }
-        boolean jobsPending = true;
-        while (jobsPending) {
-            jobsPending = false;
+        int jobsPending = 1;
+        while (jobsPending > 0) {
+            jobsPending = 0;
             for (JobInfo jobInfo : jobs.values()) {
                 JobResponse jobResponse = client.queue().get(jobInfo).join();
                 if (jobResponse.getJob().status().isPending()) {
-                    jobsPending = true;
-                    break;
+                    jobsPending++;
                 }
             }
+            System.out.println("Jobs pending: " + jobsPending);
             Thread.sleep(1000);
         }
 
