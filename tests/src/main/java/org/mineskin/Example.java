@@ -21,7 +21,7 @@ public class Example {
             .apiKey("your-api-key") // TODO: update this with your own API key (https://account.mineskin.org/keys)
             .build();
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) {
         File file = new File("skin.png");
         GenerateRequest request = GenerateRequest.upload(file)
                 .name("My Skin")
