@@ -147,11 +147,13 @@ public class MineSkinClientImpl implements MineSkinClient {
 
         @Override
         public CompletableFuture<JobResponse> get(JobInfo jobInfo) {
+            checkNotNull(jobInfo);
             return get(jobInfo.id());
         }
 
         @Override
         public CompletableFuture<JobResponse> get(String id) {
+            checkNotNull(id);
             return CompletableFuture.supplyAsync(() -> {
                 try {
                     return requestHandler.getJson(API_BASE + "/v2/queue/" + id, JobInfo.class, JobResponse::new);
@@ -163,6 +165,7 @@ public class MineSkinClientImpl implements MineSkinClient {
 
         @Override
         public CompletableFuture<JobResponse> waitForCompletion(JobInfo jobInfo) {
+            checkNotNull(jobInfo);
             return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
         }
 
