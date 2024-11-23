@@ -1,122 +1,36 @@
 package org.mineskin.response;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.mineskin.data.CodeAndMessage;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
-public class MineSkinResponse<T> {
+public interface MineSkinResponse<T> {
+    boolean isSuccess();
 
-    private final boolean success;
-    private final int status;
+    int getStatus();
 
-    private final List<CodeAndMessage> messages;
-    private final List<CodeAndMessage> errors;
-    private final List<CodeAndMessage> warnings;
+    List<CodeAndMessage> getMessages();
 
-    private final Map<String, String> headers;
-    private final String server;
-    private final String breadcrumb;
+    Optional<CodeAndMessage> getFirstMessage();
 
-    private final JsonObject rawBody;
-    private final T body;
+    List<CodeAndMessage> getErrors();
 
-    public MineSkinResponse(
-            int status,
-            Map<String, String> headers,
-            JsonObject rawBody,
-            Gson gson,
-            String primaryField, Class<T> clazz
-    ) {
-        if (rawBody.has("success")) {
-            this.success = rawBody.get("success").getAsBoolean();
-        } else {
-            this.success = status == 200;
-        }
-        this.status = status;
-        this.messages = rawBody.has("messages") ? gson.fromJson(rawBody.get("messages"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
-        this.warnings = rawBody.has("warnings") ? gson.fromJson(rawBody.get("warnings"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
-        this.errors = rawBody.has("errors") ? gson.fromJson(rawBody.get("errors"), CodeAndMessage.LIST_TYPE_TOKEN.getType()) : Collections.emptyList();
+    boolean hasErrors();
 
-        this.headers = headers.entrySet().stream()
-                .filter(e -> e.getKey().startsWith("mineskin-") || e.getKey().startsWith("x-mineskin-"))
-                .collect(HashMap::new, (m, e) -> m.put(e.getKey().toLowerCase(), e.getValue()), HashMap::putAll);
-        this.server = headers.get("mineskin-server");
-        this.breadcrumb = headers.get("mineskin-breadcrumb");
+    Optional<CodeAndMessage> getFirstError();
 
-        this.rawBody = rawBody;
-        this.body = parseBody(rawBody, gson, primaryField, clazz);
-    }
+    Optional<CodeAndMessage> getErrorOrMessage();
 
-    protected T parseBody(JsonObject rawBody, Gson gson, String primaryField, Class<T> clazz) {
-        return gson.fromJson(rawBody.get(primaryField), clazz);
-    }
+    List<CodeAndMessage> getWarnings();
 
-    public boolean isSuccess() {
-        return success;
-    }
+    Optional<CodeAndMessage> getFirstWarning();
 
-    public int getStatus() {
-        return status;
-    }
+    String getServer();
 
-    public List<CodeAndMessage> getMessages() {
-        return messages;
-    }
+    String getBreadcrumb();
 
-    public Optional<CodeAndMessage> getFirstMessage() {
-        return messages.stream().findFirst();
-    }
+    T getBody();
 
-    public List<CodeAndMessage> getErrors() {
-        return errors;
-    }
 
-    public boolean hasErrors() {
-        return !errors.isEmpty();
-    }
-
-    public Optional<CodeAndMessage> getFirstError() {
-        return errors.stream().findFirst();
-    }
-
-    public Optional<CodeAndMessage> getErrorOrMessage() {
-        return getFirstError().or(this::getFirstMessage);
-    }
-
-    public List<CodeAndMessage> getWarnings() {
-        return warnings;
-    }
-
-    public Optional<CodeAndMessage> getFirstWarning() {
-        return warnings.stream().findFirst();
-    }
-
-    public String getServer() {
-        return server;
-    }
-
-    public String getBreadcrumb() {
-        return breadcrumb;
-    }
-
-    public T getBody() {
-        return body;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "{" +
-                "success=" + success +
-                ", status=" + status +
-                ", server='" + server + '\'' +
-                ", breadcrumb='" + breadcrumb + '\'' +
-                ", headers=" + headers +
-                ", messages=" + messages +
-                ", errors=" + errors +
-                ", warnings=" + warnings +
-                "}\n" +
-                rawBody;
-    }
 }

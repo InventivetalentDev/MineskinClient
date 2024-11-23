@@ -215,6 +215,33 @@ public class GenerateTest {
         Thread.sleep(1000);
     }
 
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void duplicateQueueUrlTest(MineSkinClient client) throws InterruptedException, IOException {
+        Thread.sleep(1000);
+
+        long start = System.currentTimeMillis();
+        try {
+            String name = "mskjva-url";
+            GenerateRequest request = GenerateRequest.url("https://i.imgur.com/ZC5PRM4.png")
+                    .name(name);
+            QueueResponse res = client.queue().submit(request).join();
+            System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(res);
+            JobResponse jobResponse = res.getBody().waitForCompletion(client).join();
+            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(jobResponse);
+            SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
+            validateSkin(skinInfo, name);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
+        Thread.sleep(1000);
+    }
+
     /*
     @ParameterizedTest
     @MethodSource("clients")

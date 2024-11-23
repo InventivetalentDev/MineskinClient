@@ -9,7 +9,6 @@ import org.mineskin.request.GenerateRequest;
 import org.mineskin.response.MineSkinResponse;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
