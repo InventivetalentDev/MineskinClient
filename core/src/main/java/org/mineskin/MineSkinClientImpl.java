@@ -2,6 +2,8 @@ package org.mineskin;
 
 import com.google.gson.JsonObject;
 import org.mineskin.data.JobInfo;
+import org.mineskin.data.JobReference;
+import org.mineskin.data.NullJobReference;
 import org.mineskin.data.RateLimitInfo;
 import org.mineskin.data.SkinInfo;
 import org.mineskin.exception.MineSkinRequestException;
@@ -167,8 +169,11 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         @Override
-        public CompletableFuture<JobResponse> waitForCompletion(JobInfo jobInfo) {
+        public CompletableFuture<JobReference> waitForCompletion(JobInfo jobInfo) {
             checkNotNull(jobInfo);
+            if (jobInfo.id() == null) {
+                return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
+            }
             return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
         }
 

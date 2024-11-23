@@ -12,6 +12,7 @@ import org.mineskin.JsoupRequestHandler;
 import org.mineskin.MineSkinClient;
 import org.mineskin.MineSkinClientImpl;
 import org.mineskin.data.JobInfo;
+import org.mineskin.data.JobReference;
 import org.mineskin.data.Skin;
 import org.mineskin.data.SkinInfo;
 import org.mineskin.data.Visibility;
@@ -116,7 +117,7 @@ public class GenerateTest {
             QueueResponse res = client.queue().submit(request).join();
             System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(res);
-            JobResponse jobResponse = res.getBody().waitForCompletion(client).join();
+            JobReference jobResponse = res.getBody().waitForCompletion(client).join();
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
@@ -144,7 +145,7 @@ public class GenerateTest {
             QueueResponse res = client.queue().submit(request).join();
             System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(res);
-            JobResponse jobResponse = res.getBody().waitForCompletion(client).join();
+            JobReference jobResponse = res.getBody().waitForCompletion(client).join();
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
@@ -224,11 +225,12 @@ public class GenerateTest {
         try {
             String name = "mskjva-url";
             GenerateRequest request = GenerateRequest.url("https://i.imgur.com/ZC5PRM4.png")
+                    .visibility(Visibility.UNLISTED)
                     .name(name);
             QueueResponse res = client.queue().submit(request).join();
             System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(res);
-            JobResponse jobResponse = res.getBody().waitForCompletion(client).join();
+            JobReference jobResponse = res.getBody().waitForCompletion(client).join();
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();

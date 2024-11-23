@@ -1,6 +1,7 @@
 package org.mineskin;
 
 import org.mineskin.data.JobInfo;
+import org.mineskin.data.JobReference;
 import org.mineskin.request.GenerateRequest;
 import org.mineskin.response.JobResponse;
 import org.mineskin.response.QueueResponse;
@@ -30,6 +31,6 @@ public interface QueueClient {
     /**
      * Wait for a job to complete
      */
-    CompletableFuture<JobResponse> waitForCompletion(JobInfo jobInfo);
+    CompletableFuture<JobReference> waitForCompletion(JobInfo jobInfo);
 
 }
