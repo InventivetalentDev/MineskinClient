@@ -9,27 +9,38 @@ You can also use [mineskin.org](https://mineskin.org) to directly generate skin 
 
 The API requires official Minecraft accounts to upload the skin textures.  
 If you own a Minecraft account you don't actively use and want to contibute to the API's speed,
-please [add your account here](https://mineskin.org/account)!
+please [add your account here](https://account.mineskin.org)!
 
 ```java
 public class Example {
 
     private static final MineSkinClient CLIENT = MineSkinClient.builder()
             .requestHandler(JsoupRequestHandler::new)
-            .userAgent("MyMineSkinApp/v1.0")
-            .apiKey("your-api-key")
+            .userAgent("MyMineSkinApp/v1.0") // TODO: update this with your own user agent
+            .apiKey("your-api-key") // TODO: update this with your own API key (https://account.mineskin.org/keys)
             .build();
 
-    public static void main(String[] args) throws FileNotFoundException {
-        GenerateOptions options = GenerateOptions.create()
+    public static void main(String[] args) {
+        File file = new File("skin.png");
+        GenerateRequest request = GenerateRequest.upload(file)
                 .name("My Skin")
                 .visibility(Visibility.PUBLIC);
-        File file = new File("skin.jpg");
-        CLIENT.generateUpload(file, options)
-                .thenAccept(response -> {
-                    // get generated skin
-                    Skin skin = response.getSkin();
-                    System.out.println(skin);
+        // submit queue request
+        CLIENT.queue().submit(request)
+                .thenCompose(queueResponse -> {
+                    JobInfo job = queueResponse.getJob();
+                    // wait for job completion
+                    return job.waitForCompletion(CLIENT);
+                })
+                .thenCompose(jobResponse -> {
+                    // get skin from job or load it from the API
+                    return jobResponse.getOrLoadSkin(CLIENT);
+                })
+                .thenAccept(skinInfo -> {
+                    // do stuff with the skin
+                    System.out.println(skinInfo);
+                    System.out.println(skinInfo.texture().data().value());
+                    System.out.println(skinInfo.texture().data().signature());
                 })
                 .exceptionally(throwable -> {
                     throwable.printStackTrace();
@@ -39,13 +50,16 @@ public class Example {
 
                     if (throwable instanceof MineSkinRequestException requestException) {
                         // get error details
-                        MineSkinResponse response = requestException.getResponse();
-                        System.out.println(response.getMessageOrError());
+                        MineSkinResponse<?> response = requestException.getResponse();
+                        Optional<CodeAndMessage> detailsOptional = response.getErrorOrMessage();
+                        detailsOptional.ifPresent(details -> {
+                            System.out.println(details.code() + ": " + details.message());
+                        });
                     }
                     return null;
                 });
 
-        CLIENT.getSkinByUuid("skinuuid")
+        CLIENT.skins().get("skinuuid")
                 .thenAccept(response -> {
                     // get existing skin
                     Skin skin = response.getSkin();
@@ -62,24 +76,24 @@ public class Example {
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client</artifactId>
-        <version>2.1.1-SNAPSHOT</version>
+        <version>3.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client-jsoup</artifactId>
-        <version>2.1.1-SNAPSHOT</version>
+        <version>3.0.1-SNAPSHOT</version>
     </dependency>
 <!-- alternatively use apache httpcommons -->
 <!--    <dependency>-->
 <!--        <groupId>org.mineskin</groupId>-->
 <!--        <artifactId>java-client-apache</artifactId>-->
-<!--        <version>2.1.1-SNAPSHOT</version>-->
+<!--        <version>3.0.1-SNAPSHOT</version>-->
 <!--    </dependency>-->
 <!-- ... or java 11 HttpRequest -->
 <!--    <dependency>-->
 <!--        <groupId>org.mineskin</groupId>-->
 <!--        <artifactId>java-client-java11</artifactId>-->
-<!--        <version>2.1.1-SNAPSHOT</version>-->
+<!--        <version>3.0.1-SNAPSHOT</version>-->
 <!--    </dependency>-->
 </depencies>
 ```

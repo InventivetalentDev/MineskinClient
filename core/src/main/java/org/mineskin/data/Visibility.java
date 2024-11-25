@@ -1,17 +1,22 @@
 package org.mineskin.data;
 
+import com.google.gson.annotations.SerializedName;
+
 public enum Visibility {
+	@SerializedName("public")
+	PUBLIC("public"),
+	@SerializedName("unlisted")
+	UNLISTED("unlisted"),
+	@SerializedName("private")
+	PRIVATE("private");
 
-	PUBLIC(0),
-	UNLISTED(1);
+	private final String name;
 
-	private final int code;
-
-	Visibility(int code) {
-		this.code = code;
+	Visibility(String name) {
+		this.name = name;
 	}
 
-	public int getCode() {
-		return code;
+	public String getName() {
+		return name;
 	}
 }

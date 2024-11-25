@@ -2,8 +2,8 @@ package org.mineskin.request;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.mineskin.response.ResponseConstructor;
 import org.mineskin.response.MineSkinResponse;
+import org.mineskin.response.ResponseConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,8 +30,8 @@ public abstract class RequestHandler {
     public abstract <T, R extends MineSkinResponse<T>> R postJson(String url, JsonObject data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException;
 
     public abstract <T, R extends MineSkinResponse<T>> R postFormDataFile(String url,
-                                                                          String key, String filename, InputStream in,
-                                                                          Map<String, String> data,
-                                                                          Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException;
+                                                                                  String key, String filename, InputStream in,
+                                                                                  Map<String, String> data,
+                                                                                  Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException;
 
 }
