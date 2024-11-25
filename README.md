@@ -5,6 +5,8 @@ Client for [api.mineskin.org](https://mineskin.org)
 Can be used to generate valid texture data from skin image files.  
 You can also use [mineskin.org](https://mineskin.org) to directly generate skin data from images.
 
+**Important:** This is a client for [MineSkin V2](https://docs.mineskin.org/docs/guides/migrating-to-v2/) - for V1 see the [2.x branch](https://github.com/InventivetalentDev/MineskinClient/tree/2.x) and use versions < 3.0.0. 
+
 The API requires official Minecraft accounts to upload the skin textures.  
 If you own a Minecraft account you don't actively use and want to contibute to the API's speed,
 please [add your account here](https://account.mineskin.org)!
