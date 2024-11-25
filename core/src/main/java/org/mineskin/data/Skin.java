@@ -6,14 +6,12 @@ public interface Skin {
 
     String name();
 
-    Variant variant();
+    SkinData data();
 
-    Visibility visibility();
+    long timestamp();
 
-    TextureInfo texture();
+    int visibility();
 
     int views();
-
-    boolean duplicate();
 
 }

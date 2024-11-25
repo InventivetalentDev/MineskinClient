@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.mineskin.data.CodeAndMessage;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
@@ -58,11 +57,7 @@ public class JsoupRequestHandler extends RequestHandler {
                     gson, clazz
             );
             if (!wrapped.isSuccess()) {
-                throw new MineSkinRequestException(
-                        wrapped.getFirstError().map(CodeAndMessage::code).orElse("request_failed"),
-                        wrapped.getFirstError().map(CodeAndMessage::message).orElse("Request Failed"),
-                        wrapped
-                );
+                throw new MineSkinRequestException(wrapped.getError().orElse("Request Failed"), wrapped);
             }
             return wrapped;
         } catch (JsonParseException e) {
