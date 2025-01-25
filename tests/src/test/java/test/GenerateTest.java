@@ -163,7 +163,7 @@ public class GenerateTest {
     @Test
     public void multiQueueRenderedUploadTest() throws InterruptedException, IOException {
         MineSkinClient client = JAVA11;
-        int count = 5;
+        int count =100;
         Thread.sleep(1000);
 
         long start = System.currentTimeMillis();
@@ -204,10 +204,10 @@ public class GenerateTest {
             String name = entry.getKey();
             JobInfo jobInfo = entry.getValue();
             JobResponse jobResponse = client.queue().get(jobInfo).join();
-            assertTrue(jobResponse.getJob().status().isDone());
-            assertTrue(jobResponse.getSkin().isPresent());
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(jobResponse);
+            assertTrue(jobResponse.getJob().status().isDone());
+            assertTrue(jobResponse.getSkin().isPresent());
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
             validateSkin(skinInfo, name);
         }
