@@ -36,7 +36,7 @@ public class MineSkinClientImpl implements MineSkinClient {
 
     public static final Logger LOGGER = Logger.getLogger(MineSkinClient.class.getName());
 
-    private static final String API_BASE = "https://toast.api.mineskin.org"; //FIXME
+    private static final String API_BASE = "https://api.mineskin.org";
 
     private final RequestExecutors executors;
 
