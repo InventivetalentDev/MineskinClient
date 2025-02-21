@@ -72,7 +72,7 @@ public class Example {
 
 
 ```xml
-<depencies>
+<dependencies>
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client</artifactId>
@@ -95,7 +95,7 @@ public class Example {
 <!--        <artifactId>java-client-java11</artifactId>-->
 <!--        <version>3.0.1-SNAPSHOT</version>-->
 <!--    </dependency>-->
-</depencies>
+</dependencies>
 ```
 ```xml
 <repositories>
