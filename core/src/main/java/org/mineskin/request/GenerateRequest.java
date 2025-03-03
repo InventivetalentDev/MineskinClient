@@ -67,6 +67,7 @@ public interface GenerateRequest {
 
     GenerateRequest name(String name);
 
+    //TODO: make this a string
     GenerateRequest cape(UUID cape);
 
     GenerateOptions options();
