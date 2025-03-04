@@ -67,6 +67,10 @@ public interface GenerateRequest {
 
     GenerateRequest name(String name);
 
+    GenerateRequest cape(UUID cape);
+
+    GenerateRequest cape(String cape);
+
     GenerateOptions options();
 
 }

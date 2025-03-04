@@ -7,12 +7,14 @@ import org.mineskin.data.Visibility;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class GenerateOptions {
 
     private String name;
     private Variant variant;
     private Visibility visibility;
+    private String cape;
 
     private GenerateOptions() {
     }
@@ -45,6 +47,26 @@ public class GenerateOptions {
         return this;
     }
 
+    /**
+     * Set the cape UUID of the skin (optional)
+     *
+     * @see <a href="https://docs.mineskin.org/docs/mineskin-api/get-a-list-of-known-capes">Get a list of known capes</a>
+     */
+    public GenerateOptions cape(UUID cape) {
+        this.cape = cape.toString();
+        return this;
+    }
+
+    /**
+     * Set the cape UUID of the skin (optional)
+     *
+     * @see <a href="https://docs.mineskin.org/docs/mineskin-api/get-a-list-of-known-capes">Get a list of known capes</a>
+     */
+    public GenerateOptions cape(String cape) {
+        this.cape = cape;
+        return this;
+    }
+
     protected JsonObject toJson() {
         JsonObject json = new JsonObject();
         if (!Strings.isNullOrEmpty(name)) {
@@ -55,6 +77,9 @@ public class GenerateOptions {
         }
         if (visibility != null) {
             json.addProperty("visibility", visibility.getName());
+        }
+        if (cape != null) {
+            json.addProperty("cape", cape);
         }
         return json;
     }
@@ -74,6 +99,9 @@ public class GenerateOptions {
         }
         if (visibility != null) {
             data.put("visibility", visibility.getName());
+        }
+        if (cape != null) {
+            data.put("cape", cape);
         }
     }
 
