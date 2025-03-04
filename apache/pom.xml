@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>java-client-apache</artifactId>
-    <version>${revision}</version>
+    <version>3.0.2-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client</artifactId>
-            <version>${revision}</version>
+            <version>3.0.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
