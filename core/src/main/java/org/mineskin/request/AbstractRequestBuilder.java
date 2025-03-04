@@ -41,6 +41,12 @@ public abstract class AbstractRequestBuilder implements GenerateRequest {
     }
 
     @Override
+    public GenerateRequest cape(String cape) {
+        this.options.cape(cape);
+        return this;
+    }
+
+    @Override
     public GenerateOptions options() {
         return options;
     }
