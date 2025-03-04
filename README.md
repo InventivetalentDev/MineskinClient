@@ -72,29 +72,30 @@ public class Example {
 
 
 ```xml
+
 <dependencies>
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>3.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client-jsoup</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>3.0.2-SNAPSHOT</version>
     </dependency>
-<!-- alternatively use apache httpcommons -->
-<!--    <dependency>-->
-<!--        <groupId>org.mineskin</groupId>-->
-<!--        <artifactId>java-client-apache</artifactId>-->
-<!--        <version>3.0.1-SNAPSHOT</version>-->
-<!--    </dependency>-->
-<!-- ... or java 11 HttpRequest -->
-<!--    <dependency>-->
-<!--        <groupId>org.mineskin</groupId>-->
-<!--        <artifactId>java-client-java11</artifactId>-->
-<!--        <version>3.0.1-SNAPSHOT</version>-->
-<!--    </dependency>-->
+    <!-- alternatively use apache httpcommons -->
+    <!--    <dependency>-->
+    <!--        <groupId>org.mineskin</groupId>-->
+    <!--        <artifactId>java-client-apache</artifactId>-->
+    <!--        <version>3.0.2-SNAPSHOT</version>-->
+    <!--    </dependency>-->
+    <!-- ... or java 11 HttpRequest -->
+    <!--    <dependency>-->
+    <!--        <groupId>org.mineskin</groupId>-->
+    <!--        <artifactId>java-client-java11</artifactId>-->
+    <!--        <version>3.0.2-SNAPSHOT</version>-->
+    <!--    </dependency>-->
 </dependencies>
 ```
 ```xml
