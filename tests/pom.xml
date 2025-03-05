@@ -10,28 +10,28 @@
     </parent>
 
     <artifactId>java-client-tests</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client-jsoup</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client-apache</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client-java11</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
