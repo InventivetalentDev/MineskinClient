@@ -18,6 +18,7 @@ import org.mineskin.data.SkinInfo;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
+import org.mineskin.response.GenerateResponse;
 import org.mineskin.response.JobResponse;
 import org.mineskin.response.QueueResponse;
 
@@ -234,6 +235,34 @@ public class GenerateTest {
             System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
             System.out.println(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
+            validateSkin(skinInfo, name);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof MineSkinRequestException req) {
+                System.out.println(req.getResponse());
+            }
+            throw e;
+        }
+        Thread.sleep(1000);
+    }
+
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void singleGenerateUploadTest(MineSkinClient client) throws InterruptedException, IOException {
+        Thread.sleep(1000);
+
+        File file = File.createTempFile("mineskin-temp-upload-image", ".png");
+        ImageIO.write(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), "png", file);
+        System.out.println("#queueTest");
+        long start = System.currentTimeMillis();
+        try {
+            String name = "mskjva-upl-" + ThreadLocalRandom.current().nextInt(1000);
+            GenerateRequest request = GenerateRequest.upload(file)
+                    .visibility(Visibility.UNLISTED)
+                    .name(name);
+            GenerateResponse res = client.generate().submitAndWait(request).join();
+            System.out.println("Generate took " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(res);
+            SkinInfo skinInfo = res.getSkin();
             validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {

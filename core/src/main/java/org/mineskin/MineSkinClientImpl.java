@@ -209,7 +209,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     UploadSource source = builder.getUploadSource();
                     checkNotNull(source);
                     try (InputStream inputStream = source.getInputStream()) {
-                        GenerateResponseImpl res = requestHandler.postFormDataFile(API_BASE + "/v2/generate", "file", "mineskinjava", inputStream, data, SkinInfo.class, GenerateResponse::new);
+                        GenerateResponseImpl res = requestHandler.postFormDataFile(API_BASE + "/v2/generate", "file", "mineskinjava", inputStream, data, SkinInfo.class, GenerateResponseImpl::new);
                         handleGenerateResponse(res);
                         return res;
                     }
