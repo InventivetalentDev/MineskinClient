@@ -11,6 +11,9 @@ public interface MineSkinClient {
      */
     QueueClient queue();
 
+    /**
+     * Get the generate client
+     */
     GenerateClient generate();
 
     /**
