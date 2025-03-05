@@ -10,13 +10,13 @@
     </parent>
 
     <artifactId>java-client-jsoup</artifactId>
-    <version>3.0.2-SNAPSHOT</version>
+    <version>3.0.2</version>
 
     <dependencies>
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client</artifactId>
-            <version>3.0.2-SNAPSHOT</version>
+            <version>3.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
