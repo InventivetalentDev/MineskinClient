@@ -14,6 +14,8 @@ import org.mineskin.request.UploadRequestBuilder;
 import org.mineskin.request.UrlRequestBuilder;
 import org.mineskin.request.UserRequestBuilder;
 import org.mineskin.request.source.UploadSource;
+import org.mineskin.response.GenerateResponse;
+import org.mineskin.response.GenerateResponseImpl;
 import org.mineskin.response.JobResponse;
 import org.mineskin.response.JobResponseImpl;
 import org.mineskin.response.MineSkinResponse;
@@ -45,6 +47,7 @@ public class MineSkinClientImpl implements MineSkinClient {
     private final RequestQueue getQueue;
 
     private final QueueClient queueClient = new QueueClientImpl();
+    private final GenerateClient generateClient = new GenerateClientImpl();
     private final SkinsClient skinsClient = new SkinsClientImpl();
 
     public MineSkinClientImpl(RequestHandler requestHandler, RequestExecutors executors) {
@@ -61,6 +64,11 @@ public class MineSkinClientImpl implements MineSkinClient {
     @Override
     public QueueClient queue() {
         return queueClient;
+    }
+
+    @Override
+    public GenerateClient generate() {
+        return generateClient;
     }
 
     @Override
@@ -177,6 +185,90 @@ public class MineSkinClientImpl implements MineSkinClient {
             return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
         }
 
+
+    }
+
+    class GenerateClientImpl implements GenerateClient {
+
+        @Override
+        public CompletableFuture<GenerateResponse> submitAndWait(GenerateRequest request) {
+            if (request instanceof UploadRequestBuilder uploadRequestBuilder) {
+                return generateUpload(uploadRequestBuilder);
+            } else if (request instanceof UrlRequestBuilder urlRequestBuilder) {
+                return generateUrl(urlRequestBuilder);
+            } else if (request instanceof UserRequestBuilder userRequestBuilder) {
+                return generateUser(userRequestBuilder);
+            }
+            throw new MineskinException("Unknown request builder type: " + request.getClass());
+        }
+
+        CompletableFuture<GenerateResponse> generateUpload(UploadRequestBuilder builder) {
+            return generateQueue.submit(() -> {
+                try {
+                    Map<String, String> data = builder.options().toMap();
+                    UploadSource source = builder.getUploadSource();
+                    checkNotNull(source);
+                    try (InputStream inputStream = source.getInputStream()) {
+                        GenerateResponseImpl res = requestHandler.postFormDataFile(API_BASE + "/v2/generate", "file", "mineskinjava", inputStream, data, SkinInfo.class, GenerateResponse::new);
+                        handleGenerateResponse(res);
+                        return res;
+                    }
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                } catch (MineSkinRequestException e) {
+                    handleGenerateResponse(e.getResponse());
+                    throw e;
+                }
+            }, executors.generateExecutor());
+        }
+
+        CompletableFuture<GenerateResponse> generateUrl(UrlRequestBuilder builder) {
+            return generateQueue.submit(() -> {
+                try {
+                    JsonObject body = builder.options().toJson();
+                    URL url = builder.getUrl();
+                    checkNotNull(url);
+                    body.addProperty("url", url.toString());
+                    GenerateResponseImpl res = requestHandler.postJson(API_BASE + "/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
+                    handleGenerateResponse(res);
+                    return res;
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                } catch (MineSkinRequestException e) {
+                    handleGenerateResponse(e.getResponse());
+                    throw e;
+                }
+            }, executors.generateExecutor());
+        }
+
+        CompletableFuture<GenerateResponse> generateUser(UserRequestBuilder builder) {
+            return generateQueue.submit(() -> {
+                try {
+                    JsonObject body = builder.options().toJson();
+                    UUID uuid = builder.getUuid();
+                    checkNotNull(uuid);
+                    body.addProperty("user", uuid.toString());
+                    GenerateResponseImpl res = requestHandler.postJson(API_BASE + "/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
+                    handleGenerateResponse(res);
+                    return res;
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                } catch (MineSkinRequestException e) {
+                    handleGenerateResponse(e.getResponse());
+                    throw e;
+                }
+            }, executors.generateExecutor());
+        }
+
+        private void handleGenerateResponse(MineSkinResponse<?> response0) {
+            if (!(response0 instanceof GenerateResponse response)) return;
+            RateLimitInfo rateLimit = response.getRateLimit();
+            if (rateLimit == null) return;
+            long nextRelative = rateLimit.next().relative();
+            if (nextRelative > 0) {
+                generateQueue.setNextRequest(Math.max(generateQueue.getNextRequest(), System.currentTimeMillis() + nextRelative));
+            }
+        }
 
     }
 
