@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mineskin</groupId>
-    <artifactId>client-parent</artifactId>
-    <version>3.0.3-SNAPSHOT</version>
+    <artifactId>java-client-parent</artifactId>
+    <version>3.0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
