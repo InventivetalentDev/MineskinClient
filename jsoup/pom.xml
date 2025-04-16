@@ -6,17 +6,17 @@
     <parent>
         <groupId>org.mineskin</groupId>
         <artifactId>client-parent</artifactId>
-        <version>3.0.4-SNAPSHOT</version>
+        <version>3.0.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>java-client-jsoup</artifactId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>3.0.3-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client</artifactId>
-            <version>3.0.4-SNAPSHOT</version>
+            <version>3.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
