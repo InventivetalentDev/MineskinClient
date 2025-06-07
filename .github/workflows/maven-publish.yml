@@ -28,6 +28,8 @@ jobs:
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+      env:
+        MINESKIN_API_KEY: ${{ secrets.MINESKIN_API_KEY }}
 
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml

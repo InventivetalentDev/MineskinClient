@@ -4,11 +4,7 @@ import com.google.common.collect.Lists;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mineskin.ApacheRequestHandler;
-import org.mineskin.Java11RequestHandler;
-import org.mineskin.JsoupRequestHandler;
-import org.mineskin.MineSkinClient;
-import org.mineskin.MineSkinClientImpl;
+import org.mineskin.*;
 import org.mineskin.data.CodeAndMessage;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
@@ -25,6 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class GetTest {
 
+    static {
+        MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        MineSkinClientImpl.LOGGER.addHandler(handler);
+    }
+
     private static final MineSkinClient APACHE = MineSkinClient.builder()
             .requestHandler(ApacheRequestHandler::new)
             .userAgent("MineSkinClient-Apache/Tests")
@@ -40,13 +43,6 @@ public class GetTest {
             .userAgent("MineSkinClient-Java11/Tests")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
             .build();
-
-    static {
-        MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
-        MineSkinClientImpl.LOGGER.addHandler(handler);
-    }
 
     private static Stream<Arguments> clients() {
         return Stream.of(
@@ -80,7 +76,8 @@ public class GetTest {
         assertEquals(skinId, res.getSkin().uuid());
         assertEquals(Visibility.UNLISTED, res.getSkin().visibility());
     }
-//
+
+    //
     @ParameterizedTest
     @MethodSource("clients")
     public void getUuidNotFound(MineSkinClient client) {
