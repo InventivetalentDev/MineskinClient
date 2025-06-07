@@ -1,28 +1,12 @@
 package org.mineskin;
 
 import com.google.gson.JsonObject;
-import org.mineskin.data.JobInfo;
-import org.mineskin.data.JobReference;
-import org.mineskin.data.NullJobReference;
-import org.mineskin.data.RateLimitInfo;
-import org.mineskin.data.SkinInfo;
+import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
-import org.mineskin.request.GenerateRequest;
-import org.mineskin.request.RequestHandler;
-import org.mineskin.request.UploadRequestBuilder;
-import org.mineskin.request.UrlRequestBuilder;
-import org.mineskin.request.UserRequestBuilder;
+import org.mineskin.request.*;
 import org.mineskin.request.source.UploadSource;
-import org.mineskin.response.GenerateResponse;
-import org.mineskin.response.GenerateResponseImpl;
-import org.mineskin.response.JobResponse;
-import org.mineskin.response.JobResponseImpl;
-import org.mineskin.response.MineSkinResponse;
-import org.mineskin.response.QueueResponse;
-import org.mineskin.response.QueueResponseImpl;
-import org.mineskin.response.SkinResponse;
-import org.mineskin.response.SkinResponseImpl;
+import org.mineskin.response.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,8 +36,8 @@ public class MineSkinClientImpl implements MineSkinClient {
         this.requestHandler = checkNotNull(requestHandler);
         this.executors = checkNotNull(executors);
 
-        this.generateQueue = new RequestQueue(executors.generateRequestScheduler(), 200, 1);
-        this.getQueue = new RequestQueue(executors.getRequestScheduler(), 100, 5);
+        this.generateQueue = new RequestQueue(executors.generateQueueOptions());
+        this.getQueue = new RequestQueue(executors.getQueueOptions());
     }
 
     /// //
@@ -180,7 +164,8 @@ public class MineSkinClientImpl implements MineSkinClient {
             if (jobInfo.id() == null) {
                 return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
             }
-            return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
+            JobCheckOptions options = executors.jobCheckOptions();
+            return new JobChecker(MineSkinClientImpl.this, jobInfo, options).check();
         }
 
 
