@@ -53,7 +53,7 @@ public class MineSkinClientImpl implements MineSkinClient {
         this.executors = checkNotNull(executors);
 
         this.generateQueue = new RequestQueue(executors.generateRequestScheduler(), 200, 1);
-        this.getQueue = new RequestQueue(executors.jobCheckScheduler(), 100, 5);
+        this.getQueue = new RequestQueue(executors.getRequestScheduler(), 100, 5);
     }
 
     /// //
