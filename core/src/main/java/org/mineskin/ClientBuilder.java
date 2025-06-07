@@ -131,10 +131,17 @@ public class ClientBuilder {
             throw new IllegalStateException("RequestHandlerConstructor is not set");
         }
         if ("MineSkinClient".equals(userAgent)) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Using default User-Agent: MineSkinClient - Please set a custom User-Agent");
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Using default User-Agent: MineSkinClient - Please set a custom User-Agent (e.g. AppName/Version) to identify your application");
         }
-        if (apiKey == null) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Creating MineSkinClient without API key");
+        if (apiKey == null || apiKey.isBlank()) {
+            apiKey = null;
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Creating MineSkinClient without API key - Please get an API key from https://account.mineskin.org/keys");
+        } else if (apiKey.startsWith("msk_")) {
+            String[] split = apiKey.split("_", 3);
+            if (split.length == 3) {
+                String id = split[1];
+                MineSkinClientImpl.LOGGER.log(Level.FINE, "Creating MineSkinClient with API key: " + id);
+            }
         }
 
         if (getExecutor == null) {
