@@ -40,6 +40,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class GenerateTest {
 
+    static {
+        MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        MineSkinClientImpl.LOGGER.addHandler(handler);
+    }
+
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
 
     private static final MineSkinClient APACHE = MineSkinClient.builder()
@@ -60,13 +67,6 @@ public class GenerateTest {
             .apiKey(System.getenv("MINESKIN_API_KEY"))
             .generateExecutor(EXECUTOR)
             .build();
-
-    static {
-        MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
-        MineSkinClientImpl.LOGGER.addHandler(handler);
-    }
 
     @Before
     public void before() throws InterruptedException {
