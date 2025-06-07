@@ -30,6 +30,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -184,7 +185,7 @@ public class MineSkinClientImpl implements MineSkinClient {
             return new JobChecker(
                     MineSkinClientImpl.this, jobInfo,
                     options.scheduler(), options.maxAttempts(),
-                    options.initialDelayMillis() / 1000, options.intervalMillis() / 1000
+                    options.initialDelayMillis(), options.intervalMillis(), TimeUnit.MILLISECONDS
             ).check();
         }
 

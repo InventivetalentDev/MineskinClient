@@ -22,19 +22,25 @@ public class JobChecker {
     private final int maxAttempts;
     private final int initialDelay;
     private final int interval;
+    private final TimeUnit timeUnit;
 
-    public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelay, int interval) {
+    public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelaySeconds, int intervalSeconds) {
+        this(client, jobInfo, executor, maxAttempts, initialDelaySeconds, intervalSeconds, TimeUnit.SECONDS);
+    }
+
+    public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelay, int interval, TimeUnit timeUnit) {
         this.client = client;
         this.jobInfo = jobInfo;
         this.executor = executor;
         this.maxAttempts = maxAttempts;
         this.initialDelay = initialDelay;
         this.interval = interval;
+        this.timeUnit = timeUnit;
     }
 
     public CompletableFuture<JobReference> check() {
         future = new CompletableFuture<>();
-        executor.schedule(this::checkJob, initialDelay, TimeUnit.SECONDS);
+        executor.schedule(this::checkJob, initialDelay, timeUnit);
         return future;
     }
 
@@ -52,7 +58,7 @@ public class JobChecker {
                     if (jobInfo.status() == JobStatus.COMPLETED || jobInfo.status() == JobStatus.FAILED) {
                         future.complete(response);
                     } else {
-                        executor.schedule(this::checkJob, interval, TimeUnit.SECONDS);
+                        executor.schedule(this::checkJob, interval, timeUnit);
                     }
                 })
                 .exceptionally(throwable -> {
