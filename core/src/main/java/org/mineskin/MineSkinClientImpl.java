@@ -52,8 +52,8 @@ public class MineSkinClientImpl implements MineSkinClient {
         this.requestHandler = checkNotNull(requestHandler);
         this.executors = checkNotNull(executors);
 
-        this.generateQueue = new RequestQueue(executors.generateRequestScheduler(), 200, 1);
-        this.getQueue = new RequestQueue(executors.getRequestScheduler(), 100, 5);
+        this.generateQueue = new RequestQueue(executors.generateQueueOptions());
+        this.getQueue = new RequestQueue(executors.getQueueOptions());
     }
 
     /// //
@@ -180,7 +180,12 @@ public class MineSkinClientImpl implements MineSkinClient {
             if (jobInfo.id() == null) {
                 return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
             }
-            return new JobChecker(MineSkinClientImpl.this, jobInfo, executors.jobCheckScheduler(), 10, 2, 1).check();
+            JobCheckOptions options = executors.jobCheckOptions();
+            return new JobChecker(
+                    MineSkinClientImpl.this, jobInfo,
+                    options.scheduler(), options.maxAttempts(),
+                    options.initialDelayMillis() / 1000, options.intervalMillis() / 1000
+            ).check();
         }
 
 

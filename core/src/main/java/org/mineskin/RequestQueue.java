@@ -15,6 +15,10 @@ public class RequestQueue {
     private final AtomicInteger running = new AtomicInteger(0);
     private long nextRequest = 0;
 
+    public RequestQueue(QueueOptions options) {
+        this(options.scheduler(), options.intervalMillis(), options.concurrency());
+    }
+
     public RequestQueue(ScheduledExecutorService executor, int interval, int concurrency) {
         executor.scheduleAtFixedRate(() -> {
             if (System.currentTimeMillis() < nextRequest) {
