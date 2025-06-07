@@ -25,16 +25,18 @@ public class JsoupRequestHandler extends RequestHandler {
     private final int timeout;
 
     public JsoupRequestHandler(
+            String baseUrl,
             String userAgent, String apiKey,
             int timeout,
             Gson gson) {
-        super(userAgent, apiKey, timeout, gson);
+        super(baseUrl, userAgent, apiKey, timeout, gson);
         this.userAgent = userAgent;
         this.apiKey = apiKey;
         this.timeout = timeout;
     }
 
     private Connection requestBase(Connection.Method method, String url) {
+        url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.log(Level.FINE, method + " " + url);
         Connection connection = Jsoup.connect(url)
                 .method(method)

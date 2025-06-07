@@ -40,10 +40,11 @@ public class ApacheRequestHandler extends RequestHandler {
     private final HttpClient httpClient;
 
     public ApacheRequestHandler(
+            String baseUrl,
             String userAgent, String apiKey,
             int timeout,
             Gson gson) {
-        super(userAgent, apiKey, timeout, gson);
+        super(baseUrl, userAgent, apiKey, timeout, gson);
         this.gson = gson;
 
         List<Header> defaultHeaders = new ArrayList<>();
@@ -100,6 +101,7 @@ public class ApacheRequestHandler extends RequestHandler {
 
     @Override
     public <T, R extends MineSkinResponse<T>> R getJson(String url, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.fine("GET " + url);
         HttpResponse response = this.httpClient.execute(new HttpGet(url));
         return wrapResponse(response, clazz, constructor);
@@ -107,6 +109,7 @@ public class ApacheRequestHandler extends RequestHandler {
 
     @Override
     public <T, R extends MineSkinResponse<T>> R postJson(String url, JsonObject data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.fine("POST " + url);
         HttpPost post = new HttpPost(url);
         post.setHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
@@ -118,6 +121,7 @@ public class ApacheRequestHandler extends RequestHandler {
 
     @Override
     public <T, R extends MineSkinResponse<T>> R postFormDataFile(String url, String key, String filename, InputStream in, Map<String, String> data, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.fine("POST " + url);
         HttpPost post = new HttpPost(url);
         MultipartEntityBuilder multipart = MultipartEntityBuilder.create()

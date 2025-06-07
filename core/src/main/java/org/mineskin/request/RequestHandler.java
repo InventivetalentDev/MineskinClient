@@ -12,10 +12,12 @@ import java.util.Map;
 public abstract class RequestHandler {
 
     protected final Gson gson;
+    protected final String baseUrl;
     protected final String userAgent;
     protected final String apiKey;
 
-    public RequestHandler(String userAgent, String apiKey, int timeout, Gson gson) {
+    public RequestHandler(String baseUrl, String userAgent, String apiKey, int timeout, Gson gson) {
+        this.baseUrl = baseUrl;
         this.userAgent = userAgent;
         this.apiKey = apiKey;
         this.gson = gson;

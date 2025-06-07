@@ -38,8 +38,6 @@ public class MineSkinClientImpl implements MineSkinClient {
 
     public static final Logger LOGGER = Logger.getLogger(MineSkinClient.class.getName());
 
-    private static final String API_BASE = "https://api.mineskin.org";
-
     private final RequestExecutors executors;
 
     private final RequestHandler requestHandler;
@@ -58,7 +56,7 @@ public class MineSkinClientImpl implements MineSkinClient {
         this.getQueue = new RequestQueue(executors.jobCheckScheduler(), 100, 5);
     }
 
-    /////
+    /// //
 
 
     @Override
@@ -97,7 +95,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     UploadSource source = builder.getUploadSource();
                     checkNotNull(source);
                     try (InputStream inputStream = source.getInputStream()) {
-                        QueueResponseImpl res = requestHandler.postFormDataFile(API_BASE + "/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponseImpl::new);
+                        QueueResponseImpl res = requestHandler.postFormDataFile("/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponseImpl::new);
                         handleGenerateResponse(res);
                         return res;
                     }
@@ -117,7 +115,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     URL url = builder.getUrl();
                     checkNotNull(url);
                     body.addProperty("url", url.toString());
-                    QueueResponseImpl res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponseImpl::new);
+                    QueueResponseImpl res = requestHandler.postJson("/v2/queue", body, JobInfo.class, QueueResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
                 } catch (IOException e) {
@@ -136,7 +134,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     UUID uuid = builder.getUuid();
                     checkNotNull(uuid);
                     body.addProperty("user", uuid.toString());
-                    QueueResponseImpl res = requestHandler.postJson(API_BASE + "/v2/queue", body, JobInfo.class, QueueResponseImpl::new);
+                    QueueResponseImpl res = requestHandler.postJson("/v2/queue", body, JobInfo.class, QueueResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
                 } catch (IOException e) {
@@ -169,7 +167,7 @@ public class MineSkinClientImpl implements MineSkinClient {
             checkNotNull(id);
             return CompletableFuture.supplyAsync(() -> {
                 try {
-                    return requestHandler.getJson(API_BASE + "/v2/queue/" + id, JobInfo.class, JobResponseImpl::new);
+                    return requestHandler.getJson("/v2/queue/" + id, JobInfo.class, JobResponseImpl::new);
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 }
@@ -209,7 +207,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     UploadSource source = builder.getUploadSource();
                     checkNotNull(source);
                     try (InputStream inputStream = source.getInputStream()) {
-                        GenerateResponseImpl res = requestHandler.postFormDataFile(API_BASE + "/v2/generate", "file", "mineskinjava", inputStream, data, SkinInfo.class, GenerateResponseImpl::new);
+                        GenerateResponseImpl res = requestHandler.postFormDataFile("/v2/generate", "file", "mineskinjava", inputStream, data, SkinInfo.class, GenerateResponseImpl::new);
                         handleGenerateResponse(res);
                         return res;
                     }
@@ -229,7 +227,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     URL url = builder.getUrl();
                     checkNotNull(url);
                     body.addProperty("url", url.toString());
-                    GenerateResponseImpl res = requestHandler.postJson(API_BASE + "/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
+                    GenerateResponseImpl res = requestHandler.postJson("/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
                 } catch (IOException e) {
@@ -248,7 +246,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                     UUID uuid = builder.getUuid();
                     checkNotNull(uuid);
                     body.addProperty("user", uuid.toString());
-                    GenerateResponseImpl res = requestHandler.postJson(API_BASE + "/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
+                    GenerateResponseImpl res = requestHandler.postJson("/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
                 } catch (IOException e) {
@@ -291,7 +289,7 @@ public class MineSkinClientImpl implements MineSkinClient {
             checkNotNull(uuid);
             return getQueue.submit(() -> {
                 try {
-                    return requestHandler.getJson(API_BASE + "/v2/skins/" + uuid, SkinInfo.class, SkinResponseImpl::new);
+                    return requestHandler.getJson("/v2/skins/" + uuid, SkinInfo.class, SkinResponseImpl::new);
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 }

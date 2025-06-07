@@ -11,6 +11,7 @@ import java.util.logging.Level;
 
 public class ClientBuilder {
 
+    private String baseUrl = "https://api.mineskin.org";
     private String userAgent = "MineSkinClient";
     private String apiKey = null;
     private int timeout = 10000;
@@ -30,6 +31,15 @@ public class ClientBuilder {
      */
     public static ClientBuilder create() {
         return new ClientBuilder();
+    }
+
+    /**
+     * Set the base URL for the API
+     * @param baseUrl the base URL, e.g. "<a href="https://api.mineskin.org">https://api.mineskin.org</a>"
+     */
+    public ClientBuilder baseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+        return this;
     }
 
     /**
@@ -156,7 +166,7 @@ public class ClientBuilder {
             jobCheckScheduler = generateRequestScheduler;
         }
 
-        RequestHandler requestHandler = requestHandlerConstructor.construct(userAgent, apiKey, timeout, gson);
+        RequestHandler requestHandler = requestHandlerConstructor.construct(baseUrl, userAgent, apiKey, timeout, gson);
         RequestExecutors executors = new RequestExecutors(getExecutor, generateExecutor, generateRequestScheduler, getRequestScheduler, jobCheckScheduler);
         return new MineSkinClientImpl(requestHandler, executors);
     }
