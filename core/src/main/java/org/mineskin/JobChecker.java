@@ -28,6 +28,10 @@ public class JobChecker {
         this(client, jobInfo, executor, maxAttempts, initialDelaySeconds, intervalSeconds, TimeUnit.SECONDS);
     }
 
+    public JobChecker(MineSkinClient client, JobInfo jobInfo, JobCheckOptions options) {
+        this(client, jobInfo, options.scheduler(), options.maxAttempts(), options.initialDelayMillis(), options.intervalMillis(), TimeUnit.MILLISECONDS);
+    }
+
     public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelay, int interval, TimeUnit timeUnit) {
         this.client = client;
         this.jobInfo = jobInfo;

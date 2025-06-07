@@ -1,28 +1,12 @@
 package org.mineskin;
 
 import com.google.gson.JsonObject;
-import org.mineskin.data.JobInfo;
-import org.mineskin.data.JobReference;
-import org.mineskin.data.NullJobReference;
-import org.mineskin.data.RateLimitInfo;
-import org.mineskin.data.SkinInfo;
+import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
-import org.mineskin.request.GenerateRequest;
-import org.mineskin.request.RequestHandler;
-import org.mineskin.request.UploadRequestBuilder;
-import org.mineskin.request.UrlRequestBuilder;
-import org.mineskin.request.UserRequestBuilder;
+import org.mineskin.request.*;
 import org.mineskin.request.source.UploadSource;
-import org.mineskin.response.GenerateResponse;
-import org.mineskin.response.GenerateResponseImpl;
-import org.mineskin.response.JobResponse;
-import org.mineskin.response.JobResponseImpl;
-import org.mineskin.response.MineSkinResponse;
-import org.mineskin.response.QueueResponse;
-import org.mineskin.response.QueueResponseImpl;
-import org.mineskin.response.SkinResponse;
-import org.mineskin.response.SkinResponseImpl;
+import org.mineskin.response.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +14,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -182,11 +165,7 @@ public class MineSkinClientImpl implements MineSkinClient {
                 return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
             }
             JobCheckOptions options = executors.jobCheckOptions();
-            return new JobChecker(
-                    MineSkinClientImpl.this, jobInfo,
-                    options.scheduler(), options.maxAttempts(),
-                    options.initialDelayMillis(), options.intervalMillis(), TimeUnit.MILLISECONDS
-            ).check();
+            return new JobChecker(MineSkinClientImpl.this, jobInfo, options).check();
         }
 
 
