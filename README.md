@@ -20,7 +20,7 @@ public class Example {
             .apiKey("your-api-key") // TODO: update this with your own API key (https://account.mineskin.org/keys)
             /*
              Uncomment this if you're on a paid plan with higher concurrency limits
-            .generateQueueOptions(new QueueOptions(Executors.newSingleThreadScheduledExecutor(), 200, 5concurrency))
+            .generateQueueOptions(new QueueOptions(Executors.newSingleThreadScheduledExecutor(), 200, 5))
              */
             .build();
 
