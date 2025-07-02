@@ -18,6 +18,10 @@ public class Example {
             .requestHandler(JsoupRequestHandler::new)
             .userAgent("MyMineSkinApp/v1.0") // TODO: update this with your own user agent
             .apiKey("your-api-key") // TODO: update this with your own API key (https://account.mineskin.org/keys)
+            /*
+             Uncomment this if you're on a paid plan with higher concurrency limits
+            .generateQueueOptions(new QueueOptions(Executors.newSingleThreadScheduledExecutor(), 200, 5concurrency))
+             */
             .build();
 
     public static void main(String[] args) {
