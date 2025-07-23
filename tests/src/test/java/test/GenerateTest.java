@@ -5,17 +5,8 @@ import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mineskin.ApacheRequestHandler;
-import org.mineskin.ImageUtil;
-import org.mineskin.Java11RequestHandler;
-import org.mineskin.JsoupRequestHandler;
-import org.mineskin.MineSkinClient;
-import org.mineskin.MineSkinClientImpl;
-import org.mineskin.data.JobInfo;
-import org.mineskin.data.JobReference;
-import org.mineskin.data.Skin;
-import org.mineskin.data.SkinInfo;
-import org.mineskin.data.Visibility;
+import org.mineskin.*;
+import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
 import org.mineskin.response.GenerateResponse;
@@ -26,6 +17,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
@@ -41,6 +34,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GenerateTest {
 
     static {
+        // set logger to log milliseconds
+        System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT.%1$tL %4$s %2$s: %5$s%6$s%n");
+
         MineSkinClientImpl.LOGGER.setLevel(Level.ALL);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setLevel(Level.ALL);
@@ -89,12 +85,12 @@ public class GenerateTest {
 //        final String name = "JavaClient-Url";
 //        try {
 //            GenerateResponse res = client.generateUrl("https://i.imgur.com/jkhZKDX.png", GenerateOptions.create().name(name)).join();
-//            System.out.println(res);
+//            log(res);
 //            Skin skin = res.getSkin();
 //            validateSkin(skin, name);
 //        } catch (CompletionException e) {
 //            if (e.getCause() instanceof MineSkinRequestException req) {
-//                System.out.println(req.getResponse());
+//                log(req.getResponse());
 //            }
 //            throw e;
 //        }
@@ -108,24 +104,25 @@ public class GenerateTest {
 
         File file = File.createTempFile("mineskin-temp-upload-image", ".png");
         ImageIO.write(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), "png", file);
-        System.out.println("#queueTest");
+        log("#queueTest");
         long start = System.currentTimeMillis();
         try {
             String name = "mskjva-upl-" + ThreadLocalRandom.current().nextInt(1000);
             GenerateRequest request = GenerateRequest.upload(file)
                     .visibility(Visibility.UNLISTED)
                     .name(name);
+            log("Submitting to queue: " + request);
             QueueResponse res = client.queue().submit(request).join();
-            System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(res);
+            log("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+            log(res);
             JobReference jobResponse = res.getBody().waitForCompletion(client).join();
-            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(jobResponse);
+            log("Job took " + (System.currentTimeMillis() - start) + "ms");
+            log(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
             validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
-                System.out.println(req.getResponse());
+                log(req.getResponse());
             }
             throw e;
         }
@@ -144,16 +141,16 @@ public class GenerateTest {
                     .visibility(Visibility.UNLISTED)
                     .name(name);
             QueueResponse res = client.queue().submit(request).join();
-            System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(res);
+            log("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+            log(res);
             JobReference jobResponse = res.getBody().waitForCompletion(client).join();
-            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(jobResponse);
+            log("Job took " + (System.currentTimeMillis() - start) + "ms");
+            log(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
             validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
-                System.out.println(req.getResponse());
+                log(req.getResponse());
             }
             throw e;
         }
@@ -178,12 +175,12 @@ public class GenerateTest {
                         .visibility(Visibility.UNLISTED)
                         .name(name);
                 QueueResponse res = client.queue().submit(request).join();
-                System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
-                System.out.println(res);
+                log("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+                log(res);
                 jobs.put(name, res.getBody());
             } catch (CompletionException e) {
                 if (e.getCause() instanceof MineSkinRequestException req) {
-                    System.out.println(req.getResponse());
+                    log(req.getResponse());
                 }
                 throw e;
             }
@@ -197,7 +194,7 @@ public class GenerateTest {
                     jobsPending++;
                 }
             }
-            System.out.println("Jobs pending: " + jobsPending);
+            log("Jobs pending: " + jobsPending);
             Thread.sleep(1000);
         }
 
@@ -207,8 +204,8 @@ public class GenerateTest {
             JobResponse jobResponse = client.queue().get(jobInfo).join();
             assertTrue(jobResponse.getJob().status().isDone());
             assertTrue(jobResponse.getSkin().isPresent());
-            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(jobResponse);
+            log("Job took " + (System.currentTimeMillis() - start) + "ms");
+            log(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
             validateSkin(skinInfo, name);
         }
@@ -229,16 +226,16 @@ public class GenerateTest {
                     .visibility(Visibility.UNLISTED)
                     .name(name);
             QueueResponse res = client.queue().submit(request).join();
-            System.out.println("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(res);
+            log("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+            log(res);
             JobReference jobResponse = res.getBody().waitForCompletion(client).join();
-            System.out.println("Job took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(jobResponse);
+            log("Job took " + (System.currentTimeMillis() - start) + "ms");
+            log(jobResponse);
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
             validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
-                System.out.println(req.getResponse());
+                log(req.getResponse());
             }
             throw e;
         }
@@ -252,7 +249,7 @@ public class GenerateTest {
 
         File file = File.createTempFile("mineskin-temp-upload-image", ".png");
         ImageIO.write(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), "png", file);
-        System.out.println("#queueTest");
+        log("#queueTest");
         long start = System.currentTimeMillis();
         try {
             String name = "mskjva-upl-" + ThreadLocalRandom.current().nextInt(1000);
@@ -260,13 +257,13 @@ public class GenerateTest {
                     .visibility(Visibility.UNLISTED)
                     .name(name);
             GenerateResponse res = client.generate().submitAndWait(request).join();
-            System.out.println("Generate took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(res);
+            log("Generate took " + (System.currentTimeMillis() - start) + "ms");
+            log(res);
             SkinInfo skinInfo = res.getSkin();
             validateSkin(skinInfo, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
-                System.out.println(req.getResponse());
+                log(req.getResponse());
             }
             throw e;
         }
@@ -282,17 +279,17 @@ public class GenerateTest {
         final String name = "JavaClient-Upload";
         File file = File.createTempFile("mineskin-temp-upload-image", ".png");
         ImageIO.write(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), "png", file);
-        System.out.println("#uploadTest");
+        log("#uploadTest");
         long start = System.currentTimeMillis();
         try {
             GenerateResponse res = client.generateUpload(file, GenerateOptions.create().visibility(Visibility.UNLISTED).name(name)).join();
-            System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(res);
+            log("Upload took " + (System.currentTimeMillis() - start) + "ms");
+            log(res);
             Skin skin = res.getSkin();
             validateSkin(skin, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
-                System.out.println(req.getResponse());
+                log(req.getResponse());
             }
             throw e;
         }
@@ -308,17 +305,17 @@ public class GenerateTest {
         Thread.sleep(1000);
 
         final String name = "JavaClient-Upload";
-        System.out.println("#uploadRenderedImageTest");
+        log("#uploadRenderedImageTest");
         long start = System.currentTimeMillis();
         try {
             GenerateResponse res = client.generateUpload(ImageUtil.randomImage(64, ThreadLocalRandom.current().nextBoolean() ? 64 : 32), GenerateOptions.create().visibility(Visibility.UNLISTED).name(name)).join();
-            System.out.println("Upload took " + (System.currentTimeMillis() - start) + "ms");
-            System.out.println(res);
+            log("Upload took " + (System.currentTimeMillis() - start) + "ms");
+            log(res);
             Skin skin = res.getSkin();
             validateSkin(skin, name);
         } catch (CompletionException e) {
             if (e.getCause() instanceof MineSkinRequestException req) {
-                System.out.println(req.getResponse());
+                log(req.getResponse());
             }
             throw e;
         }
@@ -347,5 +344,11 @@ public class GenerateTest {
         assertEquals(name, skin.name());
     }
 
+    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
+
+    void log(Object message) {
+        Date date = new Date();
+        System.out.println(String.format("[%s] %s", DATE_FORMAT.format(date), message));
+    }
 
 }
