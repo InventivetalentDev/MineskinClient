@@ -167,6 +167,7 @@ public class GenerateTest {
         long start = System.currentTimeMillis();
         Map<String, JobInfo> jobs = new HashMap<>();
         for (int i = 0; i < count; i++) {
+            long jobStart = System.currentTimeMillis();
             try {
                 Thread.sleep(100);
                 String name = "mskjva-upl-" + i + "-" + ThreadLocalRandom.current().nextInt(1000);
@@ -175,7 +176,7 @@ public class GenerateTest {
                         .visibility(Visibility.UNLISTED)
                         .name(name);
                 QueueResponse res = client.queue().submit(request).join();
-                log("Queue submit took " + (System.currentTimeMillis() - start) + "ms");
+                log("Queue submit took " + (System.currentTimeMillis() - jobStart) + "ms");
                 log(res);
                 jobs.put(name, res.getBody());
             } catch (CompletionException e) {
