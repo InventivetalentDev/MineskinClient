@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 public class RequestQueue {
 
@@ -22,13 +23,16 @@ public class RequestQueue {
     public RequestQueue(ScheduledExecutorService executor, int interval, int concurrency) {
         executor.scheduleAtFixedRate(() -> {
             if (System.currentTimeMillis() < nextRequest) {
+                MineSkinClientImpl.LOGGER.log(Level.FINER, "Waiting for next request in {0}ms ({1})", new Object[]{nextRequest - System.currentTimeMillis(), hashCode()});
                 return;
             }
             if (running.get() >= concurrency) {
+                MineSkinClientImpl.LOGGER.log(Level.FINER, "Skipping request, already running {0} tasks", running.get());
                 return;
             }
             Supplier<CompletableFuture<?>> supplier;
             if ((supplier = queue.poll()) != null) {
+                MineSkinClientImpl.LOGGER.log(Level.FINER, "Processing request, running {0} tasks", running.get());
                 running.incrementAndGet();
                 supplier.get();
             }
