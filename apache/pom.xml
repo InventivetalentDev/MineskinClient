@@ -6,11 +6,11 @@
     <parent>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client-parent</artifactId>
-        <version>3.0.6-SNAPSHOT</version>
+        <version>3.0.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>java-client-apache</artifactId>
-    <version>3.0.6-SNAPSHOT</version>
+    <version>3.0.7-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.mineskin</groupId>
             <artifactId>java-client</artifactId>
-            <version>3.0.6-SNAPSHOT</version>
+            <version>3.0.7-SNAPSHOT</version>
         </dependency>
 
         <dependency>
