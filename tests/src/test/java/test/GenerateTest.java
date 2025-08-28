@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -186,27 +187,35 @@ public class GenerateTest {
                 throw e;
             }
         }
+
+        Map<String, JobInfo> completedJobs = new HashMap<>();
         int jobsPending = 1;
         while (jobsPending > 0) {
             jobsPending = 0;
-            for (JobInfo jobInfo : jobs.values()) {
+            Iterator<Map.Entry<String, JobInfo>> iterator = jobs.entrySet().iterator();
+            for (; iterator.hasNext(); ) {
+                Map.Entry<String, JobInfo> entry = iterator.next();
+                JobInfo jobInfo = entry.getValue();
                 JobResponse jobResponse = client.queue().get(jobInfo).join();
                 if (jobResponse.getJob().status().isPending()) {
                     jobsPending++;
+                } else {
+                    completedJobs.put(entry.getKey(), jobInfo);
+                    iterator.remove();
                 }
             }
             log("Jobs pending: " + jobsPending);
             Thread.sleep(1000);
         }
 
-        for (Map.Entry<String, JobInfo> entry : jobs.entrySet()) {
+        for (Map.Entry<String, JobInfo> entry : completedJobs.entrySet()) {
             String name = entry.getKey();
             JobInfo jobInfo = entry.getValue();
             JobResponse jobResponse = client.queue().get(jobInfo).join();
-            assertTrue(jobResponse.getJob().status().isDone());
-            assertTrue(jobResponse.getSkin().isPresent());
             log("Job took " + (System.currentTimeMillis() - start) + "ms");
             log(jobResponse);
+            assertTrue(jobResponse.getJob().status().isDone());
+            assertTrue(jobResponse.getSkin().isPresent());
             SkinInfo skinInfo = jobResponse.getOrLoadSkin(client).join();
             validateSkin(skinInfo, name);
         }
