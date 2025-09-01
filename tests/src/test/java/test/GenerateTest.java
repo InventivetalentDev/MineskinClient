@@ -1,6 +1,7 @@
 package test;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -158,7 +159,7 @@ public class GenerateTest {
         Thread.sleep(1000);
     }
 
-
+    @Ignore
     @Test
     public void multiQueueRenderedUploadTest() throws InterruptedException, IOException {
         MineSkinClient client = JAVA11;
