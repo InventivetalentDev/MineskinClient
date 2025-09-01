@@ -21,4 +21,9 @@ public interface MineSkinClient {
      */
     SkinsClient skins();
 
+    /**
+     * Get the client for miscellaneous endpoints
+     */
+    MiscClient misc();
+
 }

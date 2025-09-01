@@ -33,6 +33,7 @@ public class MineSkinClientImpl implements MineSkinClient {
     private final QueueClient queueClient = new QueueClientImpl();
     private final GenerateClient generateClient = new GenerateClientImpl();
     private final SkinsClient skinsClient = new SkinsClientImpl();
+    private final MiscClient miscClient = new MiscClientImpl();
 
     public MineSkinClientImpl(RequestHandler requestHandler, RequestExecutors executors) {
         this.requestHandler = checkNotNull(requestHandler);
@@ -58,6 +59,11 @@ public class MineSkinClientImpl implements MineSkinClient {
     @Override
     public SkinsClient skins() {
         return skinsClient;
+    }
+
+    @Override
+    public MiscClient misc() {
+        return miscClient;
     }
 
     class QueueClientImpl implements QueueClient {
@@ -296,6 +302,19 @@ public class MineSkinClientImpl implements MineSkinClient {
             }, executors.getExecutor());
         }
 
+    }
+
+    class MiscClientImpl implements MiscClient {
+        @Override
+        public CompletableFuture<UserResponse> getUser() {
+            return getQueue.submit(() -> {
+                try {
+                    return requestHandler.getJson("/v2/me", UserInfo.class, UserResponseImpl::new);
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                }
+            }, executors.getExecutor());
+        }
     }
 
 }
