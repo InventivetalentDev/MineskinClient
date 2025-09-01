@@ -1,6 +1,8 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
+import org.mineskin.options.IJobCheckOptions;
+import org.mineskin.options.IQueueOptions;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
 
@@ -26,9 +28,9 @@ public class ClientBuilder {
     private Gson gson = new Gson();
     private Executor getExecutor = null;
     private Executor generateExecutor = null;
-    private QueueOptions generateQueueOptions = null;
-    private QueueOptions getQueueOptions = null;
-    private JobCheckOptions jobCheckOptions = null;
+    private IQueueOptions generateQueueOptions = null;
+    private IQueueOptions getQueueOptions = null;
+    private IJobCheckOptions jobCheckOptions = null;
     private RequestHandlerConstructor requestHandlerConstructor = null;
 
     private ClientBuilder() {
@@ -102,7 +104,7 @@ public class ClientBuilder {
     /**
      * Set the ScheduledExecutorService for submitting queue jobs
      *
-     * @deprecated use {@link #generateQueueOptions(QueueOptions)} instead
+     * @deprecated use {@link #generateQueueOptions(IQueueOptions)} instead
      */
     @Deprecated
     public ClientBuilder generateRequestScheduler(ScheduledExecutorService scheduledExecutor) {
@@ -113,8 +115,9 @@ public class ClientBuilder {
     /**
      * Set the options for submitting queue jobs<br/>
      * defaults to 200ms interval and 1 concurrent request
+     * @see QueueOptions
      */
-    public ClientBuilder generateQueueOptions(QueueOptions queueOptions) {
+    public ClientBuilder generateQueueOptions(IQueueOptions queueOptions) {
         this.generateQueueOptions = queueOptions;
         return this;
     }
@@ -122,7 +125,7 @@ public class ClientBuilder {
     /**
      * Set the ScheduledExecutorService for get requests, e.g. getting skins
      *
-     * @deprecated use {@link #getQueueOptions(QueueOptions)} instead
+     * @deprecated use {@link #getQueueOptions(IQueueOptions)} instead
      */
     @Deprecated
     public ClientBuilder getRequestScheduler(ScheduledExecutorService scheduledExecutor) {
@@ -133,8 +136,9 @@ public class ClientBuilder {
     /**
      * Set the options for get requests, e.g. getting skins<br/>
      * defaults to 100ms interval and 5 concurrent requests
+     * @see QueueOptions
      */
-    public ClientBuilder getQueueOptions(QueueOptions queueOptions) {
+    public ClientBuilder getQueueOptions(IQueueOptions queueOptions) {
         this.getQueueOptions = queueOptions;
         return this;
     }
@@ -142,7 +146,7 @@ public class ClientBuilder {
     /**
      * Set the ScheduledExecutorService for checking job status
      *
-     * @deprecated use {@link #jobCheckOptions(JobCheckOptions)} instead
+     * @deprecated use {@link #jobCheckOptions(IJobCheckOptions)} instead
      */
     @Deprecated
     public ClientBuilder jobCheckScheduler(ScheduledExecutorService scheduledExecutor) {
@@ -153,8 +157,9 @@ public class ClientBuilder {
     /**
      * Set the options for checking job status<br/>
      * defaults to 1000ms interval, 2000ms initial delay, and 10 max attempts
+     * @see JobCheckOptions
      */
-    public ClientBuilder jobCheckOptions(JobCheckOptions jobCheckOptions) {
+    public ClientBuilder jobCheckOptions(IJobCheckOptions jobCheckOptions) {
         this.jobCheckOptions = jobCheckOptions;
         return this;
     }

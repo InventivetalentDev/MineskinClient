@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.options.IJobCheckOptions;
 import org.mineskin.request.*;
 import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.*;
@@ -171,7 +172,7 @@ public class MineSkinClientImpl implements MineSkinClient {
             if (jobInfo.id() == null) {
                 return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
             }
-            JobCheckOptions options = executors.jobCheckOptions();
+            IJobCheckOptions options = executors.jobCheckOptions();
             return new JobChecker(MineSkinClientImpl.this, jobInfo, options).check();
         }
 

@@ -4,6 +4,7 @@ import org.mineskin.data.JobInfo;
 import org.mineskin.data.JobReference;
 import org.mineskin.data.JobStatus;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.options.IJobCheckOptions;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,7 +29,7 @@ public class JobChecker {
         this(client, jobInfo, executor, maxAttempts, initialDelaySeconds, intervalSeconds, TimeUnit.SECONDS);
     }
 
-    public JobChecker(MineSkinClient client, JobInfo jobInfo, JobCheckOptions options) {
+    public JobChecker(MineSkinClient client, JobInfo jobInfo, IJobCheckOptions options) {
         this(client, jobInfo, options.scheduler(), options.maxAttempts(), options.initialDelayMillis(), options.intervalMillis(), TimeUnit.MILLISECONDS);
     }
 

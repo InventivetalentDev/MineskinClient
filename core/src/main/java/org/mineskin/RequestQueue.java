@@ -1,5 +1,7 @@
 package org.mineskin;
 
+import org.mineskin.options.IQueueOptions;
+
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +18,7 @@ public class RequestQueue {
     private final AtomicInteger running = new AtomicInteger(0);
     private long nextRequest = 0;
 
-    public RequestQueue(QueueOptions options) {
+    public RequestQueue(IQueueOptions options) {
         this(options.scheduler(), options.intervalMillis(), options.concurrency());
     }
 

@@ -1,5 +1,7 @@
 package org.mineskin;
 
+import org.mineskin.options.IQueueOptions;
+
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -11,5 +13,5 @@ public record QueueOptions(
         ScheduledExecutorService scheduler,
         int intervalMillis,
         int concurrency
-) {
+) implements IQueueOptions {
 }

@@ -1,5 +1,7 @@
 package org.mineskin;
 
+import org.mineskin.options.IJobCheckOptions;
+
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -13,5 +15,5 @@ public record JobCheckOptions(
         int intervalMillis,
         int initialDelayMillis,
         int maxAttempts
-) {
+) implements IJobCheckOptions {
 }
