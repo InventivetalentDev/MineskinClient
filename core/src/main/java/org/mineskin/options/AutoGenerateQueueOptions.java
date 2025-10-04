@@ -15,24 +15,31 @@ import java.util.logging.Level;
 public class AutoGenerateQueueOptions implements IQueueOptions {
 
     private static final int MIN_INTERVAL_MILLIS = 100;
-    private static final int MAX_INTERVAL_MILLIS = 10000;
+    private static final int MAX_INTERVAL_MILLIS = 1000;
     private static final int MIN_CONCURRENCY = 1;
     private static final int MAX_CONCURRENCY = 30;
 
-    private final MineSkinClient client;
     private final ScheduledExecutorService scheduler;
+    private MineSkinClient client;
 
     private final AtomicLong lastRefresh = new AtomicLong(0);
 
-    private final AtomicInteger intervalMillis = new AtomicInteger(200);
-    private final AtomicInteger concurrency = new AtomicInteger(1);
+    private final AtomicInteger intervalMillis = new AtomicInteger(MAX_INTERVAL_MILLIS);
+    private final AtomicInteger concurrency = new AtomicInteger(MIN_INTERVAL_MILLIS);
 
     public AutoGenerateQueueOptions(
-            MineSkinClient client,
             ScheduledExecutorService scheduler
     ) {
-        this.client = client;
         this.scheduler = scheduler;
+    }
+
+    public void setClient(MineSkinClient client) {
+        this.client = client;
+        // Initial load
+        reloadGrants().exceptionally(throwable -> {
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to load grants", throwable);
+            return null;
+        });
     }
 
     @Override
@@ -55,7 +62,6 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
     private void reloadIfNeeded() {
         long now = System.currentTimeMillis();
         if (now - lastRefresh.get() > TimeUnit.MINUTES.toMillis(5)) { // 5 minutes
-            lastRefresh.set(now);
             reloadGrants().exceptionally(throwable -> {
                 MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to reload grants", throwable);
                 return null;
@@ -64,6 +70,11 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
     }
 
     public CompletableFuture<Void> reloadGrants() {
+        if (client == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        lastRefresh.set(System.currentTimeMillis());
+
         return client.misc().getUser()
                 .thenApply(UserResponse::getUser)
                 .thenApply(User::grants)

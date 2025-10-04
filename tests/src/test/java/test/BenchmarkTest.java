@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mineskin.*;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
+import org.mineskin.options.AutoGenerateQueueOptions;
 import org.mineskin.request.GenerateRequest;
 import org.mineskin.response.QueueResponse;
 
@@ -45,10 +46,11 @@ public class BenchmarkTest {
             .userAgent("MineSkinClient/Benchmark")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
             .generateExecutor(EXECUTOR)
-            .generateQueueOptions(new QueueOptions(
-                    Executors.newSingleThreadScheduledExecutor(),
-                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
-            ))
+//            .generateQueueOptions(new QueueOptions(
+//                    Executors.newSingleThreadScheduledExecutor(),
+//                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
+//            ))
+            .generateQueueOptions(new AutoGenerateQueueOptions(Executors.newSingleThreadScheduledExecutor()))
             .build();
 
     private final AtomicInteger per10s = new AtomicInteger();
