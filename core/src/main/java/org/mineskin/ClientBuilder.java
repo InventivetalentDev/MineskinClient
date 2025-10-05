@@ -153,7 +153,7 @@ public class ClientBuilder {
      */
     @Deprecated
     public ClientBuilder jobCheckScheduler(ScheduledExecutorService scheduledExecutor) {
-        this.jobCheckOptions = new JobCheckOptions(scheduledExecutor, DEFAULT_JOB_CHECK_INTERVAL, DEFAULT_JOB_CHECK_INITIAL_DELAY, DEFAULT_JOB_CHECK_MAX_ATTEMPTS);
+        this.jobCheckOptions = new JobCheckOptions(scheduledExecutor, DEFAULT_JOB_CHECK_INTERVAL, DEFAULT_JOB_CHECK_INITIAL_DELAY, DEFAULT_JOB_CHECK_MAX_ATTEMPTS, false);
         return this;
     }
 
@@ -235,7 +235,8 @@ public class ClientBuilder {
                     generateQueueOptions.scheduler(),
                     DEFAULT_JOB_CHECK_INTERVAL,
                     DEFAULT_JOB_CHECK_INITIAL_DELAY,
-                    DEFAULT_JOB_CHECK_MAX_ATTEMPTS
+                    DEFAULT_JOB_CHECK_MAX_ATTEMPTS,
+                    false
             );
         }
 

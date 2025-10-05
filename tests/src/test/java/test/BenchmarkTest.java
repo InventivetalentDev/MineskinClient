@@ -6,7 +6,6 @@ import org.mineskin.*;
 import org.mineskin.data.Breadcrumbed;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
-import org.mineskin.options.AutoGenerateQueueOptions;
 import org.mineskin.request.GenerateRequest;
 import org.mineskin.response.QueueResponse;
 
@@ -51,8 +50,8 @@ public class BenchmarkTest {
 //                    Executors.newSingleThreadScheduledExecutor(),
 //                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
 //            ))
-            .generateQueueOptions(new AutoGenerateQueueOptions())
-            .jobCheckOptions(new JobCheckOptions(500, 500, 20, true))
+            .generateQueueOptions(QueueOptions.createAutoGenerate())
+            .jobCheckOptions(JobCheckOptions.create().withUseEta().withInterval(500).withMaxAttempts(50))
             .build();
 
     private final AtomicInteger per10s = new AtomicInteger();
