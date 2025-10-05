@@ -76,7 +76,7 @@ public class JobChecker {
 
     private void checkJob() {
         if (attempts.incrementAndGet() > maxAttempts) {
-            future.completeExceptionally(new MineskinException("Max attempts reached"));
+            future.completeExceptionally(new MineskinException("Max attempts reached").withBreadcrumb(jobInfo.getBreadcrumb()));
             return;
         }
         client.queue().get(jobInfo)
@@ -84,6 +84,7 @@ public class JobChecker {
                     JobInfo info = response.getBody();
                     if (info != null) {
                         jobInfo = info;
+//                        client.getLogger().log(Level.FINER, "ETA {0} {1}", new Object[]{info.eta(), info.getBreadcrumb()});
                     }
                     if (jobInfo.status() == JobStatus.COMPLETED || jobInfo.status() == JobStatus.FAILED) {
                         future.complete(response);

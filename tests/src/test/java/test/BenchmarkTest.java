@@ -3,6 +3,7 @@ package test;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mineskin.*;
+import org.mineskin.data.Breadcrumbed;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.options.AutoGenerateQueueOptions;
@@ -141,6 +142,9 @@ public class BenchmarkTest {
                         total.incrementAndGet();
                     })
                     .exceptionally(throwable -> {
+                        if (throwable instanceof CompletionException e && e.getCause() instanceof Breadcrumbed breadcrumb) {
+                            log(breadcrumb.getBreadcrumb() + " (exception 1)");
+                        }
                         if (throwable instanceof CompletionException e && e.getCause() instanceof MineSkinRequestException req) {
                             log(req.getResponse());
                         } else {
@@ -150,6 +154,9 @@ public class BenchmarkTest {
                     })
                     .join();
         } catch (CompletionException | InterruptedException e) {
+            if (e.getCause() instanceof Breadcrumbed breadcrumb) {
+                log(breadcrumb.getBreadcrumb() + " (exception 2)");
+            }
             if (e.getCause() instanceof MineSkinRequestException req) {
                 log(req.getResponse());
             }
