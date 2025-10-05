@@ -37,7 +37,7 @@ public class BenchmarkTest {
     private static int GENERATE_INTERVAL_MS = 100;
     private static int GENERATE_CONCURRENCY = 20;
 
-    private static int GENERATE_AMOUNT = 50;
+    private static int GENERATE_AMOUNT = 100;
 
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -50,7 +50,8 @@ public class BenchmarkTest {
 //                    Executors.newSingleThreadScheduledExecutor(),
 //                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
 //            ))
-            .generateQueueOptions(new AutoGenerateQueueOptions(Executors.newSingleThreadScheduledExecutor()))
+            .generateQueueOptions(new AutoGenerateQueueOptions())
+            .jobCheckOptions(new JobCheckOptions(500, 500, 20, true))
             .build();
 
     private final AtomicInteger per10s = new AtomicInteger();

@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 public class JobChecker {
 
@@ -24,16 +25,21 @@ public class JobChecker {
     private final int initialDelay;
     private final int interval;
     private final TimeUnit timeUnit;
+    private final boolean useEta;
 
     public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelaySeconds, int intervalSeconds) {
         this(client, jobInfo, executor, maxAttempts, initialDelaySeconds, intervalSeconds, TimeUnit.SECONDS);
     }
 
     public JobChecker(MineSkinClient client, JobInfo jobInfo, IJobCheckOptions options) {
-        this(client, jobInfo, options.scheduler(), options.maxAttempts(), options.initialDelayMillis(), options.intervalMillis(), TimeUnit.MILLISECONDS);
+        this(client, jobInfo, options.scheduler(), options.maxAttempts(), options.initialDelayMillis(), options.intervalMillis(), TimeUnit.MILLISECONDS, options.useEta());
     }
 
     public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelay, int interval, TimeUnit timeUnit) {
+        this(client, jobInfo, executor, maxAttempts, initialDelay, interval, timeUnit, false);
+    }
+
+    public JobChecker(MineSkinClient client, JobInfo jobInfo, ScheduledExecutorService executor, int maxAttempts, int initialDelay, int interval, TimeUnit timeUnit, boolean useEta) {
         this.client = client;
         this.jobInfo = jobInfo;
         this.executor = executor;
@@ -41,11 +47,30 @@ public class JobChecker {
         this.initialDelay = initialDelay;
         this.interval = interval;
         this.timeUnit = timeUnit;
+        this.useEta = useEta;
     }
 
+    /**
+     * Starts checking the job status. Only call this once.
+     *
+     * @return A future that completes when the job is completed or failed, or exceptionally if an error occurs or max attempts is reached.
+     */
     public CompletableFuture<JobReference> check() {
         future = new CompletableFuture<>();
+
+        // Try to use the ETA to schedule the first check
+        if (useEta && jobInfo.eta() > 1) {
+            long delay = jobInfo.eta() - System.currentTimeMillis();
+            if (delay > 0) {
+                client.getLogger().log(Level.FINER, "Scheduling first job check in {0}ms based on ETA", delay);
+                executor.schedule(this::checkJob, delay, TimeUnit.MILLISECONDS);
+                return future;
+            }
+        }
+
+        // or just use the initial delay
         executor.schedule(this::checkJob, initialDelay, timeUnit);
+
         return future;
     }
 

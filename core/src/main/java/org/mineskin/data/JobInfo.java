@@ -12,12 +12,18 @@ public class JobInfo {
     private final String id;
     private final JobStatus status;
     private final long timestamp;
+    private final long eta;
     private final String result;
 
     public JobInfo(String id, JobStatus status, long timestamp, String result) {
+        this(id, status, timestamp, 0, result);
+    }
+
+    public JobInfo(String id, JobStatus status, long timestamp, long eta, String result) {
         this.id = id;
         this.status = status;
         this.timestamp = timestamp;
+        this.eta = eta;
         this.result = result;
     }
 
@@ -31,6 +37,10 @@ public class JobInfo {
 
     public long timestamp() {
         return timestamp;
+    }
+
+    public long eta() {
+        return eta;
     }
 
     public Optional<String> result() {
@@ -54,6 +64,7 @@ public class JobInfo {
                 "id='" + id + '\'' +
                 ", status=" + status +
                 ", timestamp=" + timestamp +
+                ", eta=" + eta +
                 ", result='" + result + '\'' +
                 '}';
     }

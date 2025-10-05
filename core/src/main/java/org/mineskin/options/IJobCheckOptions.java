@@ -13,4 +13,6 @@ public interface IJobCheckOptions {
     int initialDelayMillis();
 
     int maxAttempts();
+
+    boolean useEta();
 }

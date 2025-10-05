@@ -6,6 +6,7 @@ import org.mineskin.data.User;
 import org.mineskin.response.UserResponse;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,6 +33,11 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
     ) {
         this.scheduler = scheduler;
     }
+
+    public AutoGenerateQueueOptions() {
+        this(Executors.newSingleThreadScheduledExecutor());
+    }
+
 
     public void setClient(MineSkinClient client) {
         this.client = client;
@@ -83,14 +89,14 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
                         int concurrent = Math.min(Math.max(rawConcurrent, MIN_CONCURRENCY), MAX_CONCURRENCY);
                         int previous = concurrency.getAndSet(concurrent);
                         if (previous != rawConcurrent) {
-                            MineSkinClientImpl.LOGGER.log(Level.FINE, "[QueueOptions] Updated concurrency from {0} to {1}", new Object[]{previous, concurrent});
+                            client.getLogger().log(Level.FINE, "[QueueOptions] Updated concurrency from {0} to {1}", new Object[]{previous, concurrent});
                         }
                     });
                     grants.perMinute().ifPresent(rawPerMinute -> {
                         int interval = Math.min(Math.max(60_000 / rawPerMinute, MIN_INTERVAL_MILLIS), MAX_INTERVAL_MILLIS);
                         int previous = intervalMillis.getAndSet(interval);
                         if (previous != interval) {
-                            MineSkinClientImpl.LOGGER.log(Level.FINE, "[QueueOptions] Updated interval from {0}ms to {1}ms (perMinute={2})", new Object[]{previous, interval, rawPerMinute});
+                            client.getLogger().log(Level.FINE, "[QueueOptions] Updated interval from {0}ms to {1}ms (perMinute={2})", new Object[]{previous, interval, rawPerMinute});
                         }
                     });
                 });
