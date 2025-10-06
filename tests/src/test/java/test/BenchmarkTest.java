@@ -7,6 +7,7 @@ import org.mineskin.data.Breadcrumbed;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
+import org.mineskin.request.backoff.RequestInterval;
 import org.mineskin.response.QueueResponse;
 
 import java.awt.image.BufferedImage;
@@ -37,7 +38,7 @@ public class BenchmarkTest {
     private static int GENERATE_INTERVAL_MS = 100;
     private static int GENERATE_CONCURRENCY = 20;
 
-    private static int GENERATE_AMOUNT = 100;
+    private static int GENERATE_AMOUNT = 200;
 
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -51,7 +52,7 @@ public class BenchmarkTest {
 //                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
 //            ))
             .generateQueueOptions(QueueOptions.createAutoGenerate())
-            .jobCheckOptions(JobCheckOptions.create().withUseEta().withInterval(500).withMaxAttempts(50))
+            .jobCheckOptions(JobCheckOptions.create().withUseEta().withInterval(RequestInterval.exponential()).withMaxAttempts(50))
             .build();
 
     private final AtomicInteger per10s = new AtomicInteger();

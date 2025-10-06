@@ -1,5 +1,7 @@
 package org.mineskin.options;
 
+import org.mineskin.request.backoff.RequestInterval;
+
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -8,6 +10,9 @@ import java.util.concurrent.ScheduledExecutorService;
 public interface IJobCheckOptions {
     ScheduledExecutorService scheduler();
 
+    RequestInterval interval();
+
+    @Deprecated
     int intervalMillis();
 
     int initialDelayMillis();
