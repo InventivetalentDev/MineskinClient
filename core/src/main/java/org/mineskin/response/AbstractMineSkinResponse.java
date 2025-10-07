@@ -3,6 +3,7 @@ package org.mineskin.response;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.mineskin.data.CodeAndMessage;
+import org.mineskin.data.MutableBreadcrumbed;
 
 import java.util.*;
 
@@ -47,6 +48,9 @@ public abstract class AbstractMineSkinResponse<T> implements MineSkinResponse<T>
 
         this.rawBody = rawBody;
         this.body = parseBody(rawBody, gson, primaryField, clazz);
+        if (this.body instanceof MutableBreadcrumbed breadcrumbed) {
+            breadcrumbed.setBreadcrumb(this.breadcrumb);
+        }
     }
 
     protected T parseBody(JsonObject rawBody, Gson gson, String primaryField, Class<T> clazz) {

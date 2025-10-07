@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.options.IJobCheckOptions;
 import org.mineskin.request.*;
 import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.*;
@@ -14,6 +15,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -31,6 +33,7 @@ public class MineSkinClientImpl implements MineSkinClient {
     private final QueueClient queueClient = new QueueClientImpl();
     private final GenerateClient generateClient = new GenerateClientImpl();
     private final SkinsClient skinsClient = new SkinsClientImpl();
+    private final MiscClient miscClient = new MiscClientImpl();
 
     public MineSkinClientImpl(RequestHandler requestHandler, RequestExecutors executors) {
         this.requestHandler = checkNotNull(requestHandler);
@@ -38,6 +41,11 @@ public class MineSkinClientImpl implements MineSkinClient {
 
         this.generateQueue = new RequestQueue(executors.generateQueueOptions());
         this.getQueue = new RequestQueue(executors.getQueueOptions());
+    }
+
+    @Override
+    public Logger getLogger() {
+        return LOGGER;
     }
 
     /// //
@@ -58,6 +66,11 @@ public class MineSkinClientImpl implements MineSkinClient {
         return skinsClient;
     }
 
+    @Override
+    public MiscClient misc() {
+        return miscClient;
+    }
+
     class QueueClientImpl implements QueueClient {
 
         @Override
@@ -73,12 +86,14 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         CompletableFuture<QueueResponse> queueUpload(UploadRequestBuilder builder) {
+            LOGGER.log(Level.FINER, "Adding upload request to internal queue: {0}", builder);
             return generateQueue.submit(() -> {
                 try {
                     Map<String, String> data = builder.options().toMap();
                     UploadSource source = builder.getUploadSource();
                     checkNotNull(source);
                     try (InputStream inputStream = source.getInputStream()) {
+                        LOGGER.log(Level.FINER, "Submitting to MineSkin queue: {0}", builder);
                         QueueResponseImpl res = requestHandler.postFormDataFile("/v2/queue", "file", "mineskinjava", inputStream, data, JobInfo.class, QueueResponseImpl::new);
                         handleGenerateResponse(res);
                         return res;
@@ -93,12 +108,14 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         CompletableFuture<QueueResponse> queueUrl(UrlRequestBuilder builder) {
+            LOGGER.log(Level.FINER, "Adding url request to internal queue: {0}", builder);
             return generateQueue.submit(() -> {
                 try {
                     JsonObject body = builder.options().toJson();
                     URL url = builder.getUrl();
                     checkNotNull(url);
                     body.addProperty("url", url.toString());
+                    LOGGER.log(Level.FINER, "Submitting to MineSkin queue: {0}", builder);
                     QueueResponseImpl res = requestHandler.postJson("/v2/queue", body, JobInfo.class, QueueResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
@@ -112,12 +129,14 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         CompletableFuture<QueueResponse> queueUser(UserRequestBuilder builder) {
+            LOGGER.log(Level.FINER, "Adding user request to internal queue: {0}", builder);
             return generateQueue.submit(() -> {
                 try {
                     JsonObject body = builder.options().toJson();
                     UUID uuid = builder.getUuid();
                     checkNotNull(uuid);
                     body.addProperty("user", uuid.toString());
+                    LOGGER.log(Level.FINER, "Submitting to MineSkin queue: {0}", builder);
                     QueueResponseImpl res = requestHandler.postJson("/v2/queue", body, JobInfo.class, QueueResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
@@ -164,7 +183,7 @@ public class MineSkinClientImpl implements MineSkinClient {
             if (jobInfo.id() == null) {
                 return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
             }
-            JobCheckOptions options = executors.jobCheckOptions();
+            IJobCheckOptions options = executors.jobCheckOptions();
             return new JobChecker(MineSkinClientImpl.this, jobInfo, options).check();
         }
 
@@ -186,12 +205,14 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         CompletableFuture<GenerateResponse> generateUpload(UploadRequestBuilder builder) {
+            LOGGER.log(Level.FINER, "Adding upload request to internal generate queue: {0}", builder);
             return generateQueue.submit(() -> {
                 try {
                     Map<String, String> data = builder.options().toMap();
                     UploadSource source = builder.getUploadSource();
                     checkNotNull(source);
                     try (InputStream inputStream = source.getInputStream()) {
+                        LOGGER.log(Level.FINER, "Submitting to MineSkin generate: {0}", builder);
                         GenerateResponseImpl res = requestHandler.postFormDataFile("/v2/generate", "file", "mineskinjava", inputStream, data, SkinInfo.class, GenerateResponseImpl::new);
                         handleGenerateResponse(res);
                         return res;
@@ -206,12 +227,14 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         CompletableFuture<GenerateResponse> generateUrl(UrlRequestBuilder builder) {
+            LOGGER.log(Level.FINER, "Adding url request to internal generate queue: {0}", builder);
             return generateQueue.submit(() -> {
                 try {
                     JsonObject body = builder.options().toJson();
                     URL url = builder.getUrl();
                     checkNotNull(url);
                     body.addProperty("url", url.toString());
+                    LOGGER.log(Level.FINER, "Submitting to MineSkin generate: {0}", builder);
                     GenerateResponseImpl res = requestHandler.postJson("/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
@@ -225,12 +248,14 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         CompletableFuture<GenerateResponse> generateUser(UserRequestBuilder builder) {
+            LOGGER.log(Level.FINER, "Adding user request to internal generate queue: {0}", builder);
             return generateQueue.submit(() -> {
                 try {
                     JsonObject body = builder.options().toJson();
                     UUID uuid = builder.getUuid();
                     checkNotNull(uuid);
                     body.addProperty("user", uuid.toString());
+                    LOGGER.log(Level.FINER, "Submitting to MineSkin generate: {0}", builder);
                     GenerateResponseImpl res = requestHandler.postJson("/v2/generate", body, SkinInfo.class, GenerateResponseImpl::new);
                     handleGenerateResponse(res);
                     return res;
@@ -244,6 +269,7 @@ public class MineSkinClientImpl implements MineSkinClient {
         }
 
         private void handleGenerateResponse(MineSkinResponse<?> response0) {
+            LOGGER.log(Level.FINER, "Handling generate response: {0}", response0);
             if (!(response0 instanceof GenerateResponse response)) return;
             RateLimitInfo rateLimit = response.getRateLimit();
             if (rateLimit == null) return;
@@ -281,6 +307,19 @@ public class MineSkinClientImpl implements MineSkinClient {
             }, executors.getExecutor());
         }
 
+    }
+
+    class MiscClientImpl implements MiscClient {
+        @Override
+        public CompletableFuture<UserResponse> getUser() {
+            return getQueue.submit(() -> {
+                try {
+                    return requestHandler.getJson("/v2/me", UserInfo.class, UserResponseImpl::new);
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                }
+            }, executors.getExecutor());
+        }
     }
 
 }

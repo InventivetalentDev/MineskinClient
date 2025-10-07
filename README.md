@@ -18,6 +18,10 @@ public class Example {
             .requestHandler(JsoupRequestHandler::new)
             .userAgent("MyMineSkinApp/v1.0") // TODO: update this with your own user agent
             .apiKey("your-api-key") // TODO: update this with your own API key (https://account.mineskin.org/keys)
+            /*
+             Uncomment this if you're on a paid plan with higher concurrency limits
+            .generateQueueOptions(new QueueOptions(Executors.newSingleThreadScheduledExecutor(), 200, 5))
+             */
             .build();
 
     public static void main(String[] args) {
@@ -77,24 +81,24 @@ public class Example {
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client</artifactId>
-        <version>3.0.6</version>
+        <version>3.2.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.mineskin</groupId>
         <artifactId>java-client-jsoup</artifactId>
-        <version>3.0.6</version>
+        <version>3.2.0-SNAPSHOT</version>
     </dependency>
     <!-- alternatively use apache httpcommons -->
     <!--    <dependency>-->
     <!--        <groupId>org.mineskin</groupId>-->
     <!--        <artifactId>java-client-apache</artifactId>-->
-    <!--        <version>3.0.6</version>-->
+    <!--        <version>3.2.0-SNAPSHOT</version>-->
     <!--    </dependency>-->
     <!-- ... or java 11 HttpRequest -->
     <!--    <dependency>-->
     <!--        <groupId>org.mineskin</groupId>-->
     <!--        <artifactId>java-client-java11</artifactId>-->
-    <!--        <version>3.0.6</version>-->
+    <!--        <version>3.2.0-SNAPSHOT</version>-->
     <!--    </dependency>-->
 </dependencies>
 ```

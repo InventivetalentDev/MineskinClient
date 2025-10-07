@@ -1,6 +1,8 @@
 package org.mineskin.data;
 
-public class SkinInfo implements Skin {
+import javax.annotation.Nullable;
+
+public class SkinInfo implements Skin, MutableBreadcrumbed {
 
     private final String uuid;
     private final String name;
@@ -11,6 +13,8 @@ public class SkinInfo implements Skin {
 
     private final int views;
     private final boolean duplicate;
+
+    private String breadcrumb;
 
     public SkinInfo(String uuid, String name, Variant variant, Visibility visibility, TextureInfo texture, GeneratorInfo generator, int views, boolean duplicate) {
         this.uuid = uuid;
@@ -62,6 +66,17 @@ public class SkinInfo implements Skin {
         return duplicate;
     }
 
+    @Nullable
+    @Override
+    public String getBreadcrumb() {
+        return breadcrumb;
+    }
+
+    @Override
+    public void setBreadcrumb(String breadcrumb) {
+        this.breadcrumb = breadcrumb;
+    }
+
     @Override
     public String toString() {
         return "SkinInfo{" +
@@ -73,6 +88,7 @@ public class SkinInfo implements Skin {
                 ", generator=" + generator +
                 ", views=" + views +
                 ", duplicate=" + duplicate +
+                ", breadcrumb='" + breadcrumb + '\'' +
                 '}';
     }
 }
