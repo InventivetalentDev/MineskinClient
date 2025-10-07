@@ -1,6 +1,11 @@
 package org.mineskin;
 
 import org.mineskin.options.AutoGenerateQueueOptions;
+import org.mineskin.options.IQueueOptions;
+
+import java.util.concurrent.Executors;
+
+import org.mineskin.options.AutoGenerateQueueOptions;
 import org.mineskin.options.GenerateQueueOptions;
 import org.mineskin.options.GetQueueOptions;
 import org.mineskin.options.IQueueOptions;

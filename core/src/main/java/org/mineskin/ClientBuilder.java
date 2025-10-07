@@ -1,6 +1,9 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
+import org.mineskin.options.AutoGenerateQueueOptions;
+import org.mineskin.options.IJobCheckOptions;
+import org.mineskin.options.IQueueOptions;
 import org.mineskin.options.*;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
