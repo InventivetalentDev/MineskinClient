@@ -1,9 +1,7 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
-import org.mineskin.options.AutoGenerateQueueOptions;
-import org.mineskin.options.IJobCheckOptions;
-import org.mineskin.options.IQueueOptions;
+import org.mineskin.options.*;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
 
@@ -115,8 +113,17 @@ public class ClientBuilder {
 
     /**
      * Set the options for submitting queue jobs<br/>
-     * defaults to 200ms interval and 1 concurrent request
+     * defaults to 200ms interval and 1 concurrent request<br/>
+     * For example:
+     * <pre>
+     * {@code
+     * GenerateQueueOptions.create()
+     *         .withInterval(200, TimeUnit.MILLISECONDS)
+     *         .withConcurrency(2)
+     *  }
+     * </pre>
      *
+     * @see GenerateQueueOptions
      * @see QueueOptions
      */
     public ClientBuilder generateQueueOptions(IQueueOptions queueOptions) {
@@ -137,8 +144,16 @@ public class ClientBuilder {
 
     /**
      * Set the options for get requests, e.g. getting skins<br/>
-     * defaults to 100ms interval and 5 concurrent requests
+     * defaults to 100ms interval and 5 concurrent requests<br/>
+     * For example:
+     * <pre>
+     * {@code
+     * GetQueueOptions.create()
+     *         .withInterval(500, TimeUnit.MILLISECONDS)
+     *  }
+     * </pre>
      *
+     * @see GetQueueOptions
      * @see QueueOptions
      */
     public ClientBuilder getQueueOptions(IQueueOptions queueOptions) {
@@ -159,7 +174,16 @@ public class ClientBuilder {
 
     /**
      * Set the options for checking job status<br/>
-     * defaults to 1000ms interval, 2000ms initial delay, and 10 max attempts
+     * defaults to 1000ms interval, 2000ms initial delay, and 10 max attempts<br/>
+     * For example:
+     * <pre>
+     * {@code
+     * JobCheckOptions.create()
+     *         .withInitialDelay(1000, TimeUnit.MILLISECONDS)
+     *         .withInterval(RequestInterval.exponential())
+     *         .withMaxAttempts(50)
+     * }
+     * </pre>
      *
      * @see JobCheckOptions
      */

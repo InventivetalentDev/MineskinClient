@@ -1,9 +1,10 @@
 package org.mineskin;
 
 import org.mineskin.options.AutoGenerateQueueOptions;
+import org.mineskin.options.GenerateQueueOptions;
+import org.mineskin.options.GetQueueOptions;
 import org.mineskin.options.IQueueOptions;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -20,48 +21,64 @@ public record QueueOptions(
 
     /**
      * Creates a QueueOptions instance with default values for generate requests (200ms interval, 1 concurrent request).
+     *
+     * @deprecated use {@link org.mineskin.options.GenerateQueueOptions#create(ScheduledExecutorService)}
      */
+    @Deprecated
     public static QueueOptions createGenerate(ScheduledExecutorService scheduler) {
-        return new QueueOptions(scheduler, 200, 1);
+        return GenerateQueueOptions.create(scheduler);
     }
 
     /**
      * Creates a QueueOptions instance with default values for generate requests (200ms interval, 1 concurrent request).
+     *
+     * @deprecated use {@link org.mineskin.options.GenerateQueueOptions#create()}
      */
+    @Deprecated
     public static QueueOptions createGenerate() {
-        return createGenerate(Executors.newSingleThreadScheduledExecutor());
+        return GenerateQueueOptions.create();
     }
 
     /**
      * Creates a QueueOptions instance that automatically adjusts the interval and concurrency based on the user's allowance.
      *
      * @see AutoGenerateQueueOptions
+     * @deprecated use {@link GenerateQueueOptions#createAuto(ScheduledExecutorService)}
      */
+    @Deprecated
     public static AutoGenerateQueueOptions createAutoGenerate(ScheduledExecutorService scheduler) {
-        return new AutoGenerateQueueOptions(scheduler);
+        return GenerateQueueOptions.createAuto(scheduler);
     }
 
     /**
      * Creates a QueueOptions instance that automatically adjusts the interval and concurrency based on the user's allowance.
      *
      * @see AutoGenerateQueueOptions
+     * @deprecated use {@link GenerateQueueOptions#createAuto()}
      */
+    @Deprecated
     public static AutoGenerateQueueOptions createAutoGenerate() {
-        return createAutoGenerate(Executors.newSingleThreadScheduledExecutor());
+        return GenerateQueueOptions.createAuto();
     }
 
     /**
      * Creates a QueueOptions instance with default values for get requests (100ms interval, 5 concurrent requests).
+     *
+     * @deprecated use {@link org.mineskin.options.GetQueueOptions#create(ScheduledExecutorService)}
      */
+    @Deprecated
     public static QueueOptions createGet(ScheduledExecutorService scheduler) {
-        return new QueueOptions(scheduler, 100, 5);
+        return GetQueueOptions.create(scheduler);
     }
 
     /**
      * Creates a QueueOptions instance with default values for get requests (100ms interval, 5 concurrent requests).
+     *
+     * @deprecated use {@link GetQueueOptions#create()}
      */
+    @Deprecated
     public static QueueOptions createGet() {
-        return createGet(Executors.newSingleThreadScheduledExecutor());
+        return GetQueueOptions.create();
     }
 
     public QueueOptions withInterval(int interval, TimeUnit unit) {

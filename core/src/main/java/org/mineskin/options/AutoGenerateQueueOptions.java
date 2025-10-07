@@ -38,7 +38,6 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
         this(Executors.newSingleThreadScheduledExecutor());
     }
 
-
     public void setClient(MineSkinClient client) {
         this.client = client;
         // Initial load

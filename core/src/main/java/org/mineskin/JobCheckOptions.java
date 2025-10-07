@@ -5,6 +5,7 @@ import org.mineskin.request.backoff.RequestInterval;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Example:
@@ -24,11 +25,11 @@ public final class JobCheckOptions implements IJobCheckOptions {
     private final boolean useEta;
 
     /**
-     * @param scheduler   Executor service to run the job checks - this should be a single-threaded scheduler
-     * @param interval    Interval strategy between each request, see {@link RequestInterval}
+     * @param scheduler          Executor service to run the job checks - this should be a single-threaded scheduler
+     * @param interval           Interval strategy between each request, see {@link RequestInterval}
      * @param initialDelayMillis Initial delay in milliseconds before the first job check, default is 2000
-     * @param maxAttempts Maximum number of attempts to check the job status, default is 10
-     * @param useEta      Whether to use the estimated completion time provided by the server to schedule the first check, default is false
+     * @param maxAttempts        Maximum number of attempts to check the job status, default is 10
+     * @param useEta             Whether to use the estimated completion time provided by the server to schedule the first check, default is false
      */
     @Deprecated
     public JobCheckOptions(
@@ -103,6 +104,10 @@ public final class JobCheckOptions implements IJobCheckOptions {
 
     public JobCheckOptions withInitialDelay(int initialDelayMillis) {
         return new JobCheckOptions(scheduler, interval, initialDelayMillis, maxAttempts, useEta);
+    }
+
+    public JobCheckOptions withInitialDelay(int initialDelay, TimeUnit unit) {
+        return new JobCheckOptions(scheduler, interval, (int) unit.toMillis(initialDelay), maxAttempts, useEta);
     }
 
     public JobCheckOptions withMaxAttempts(int maxAttempts) {
