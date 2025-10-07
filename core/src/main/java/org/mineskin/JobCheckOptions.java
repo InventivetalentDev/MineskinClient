@@ -6,6 +6,15 @@ import org.mineskin.request.backoff.RequestInterval;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+/**
+ * Example:
+ * <pre>
+ *     JobCheckOptions.create()
+ *           .withUseEta()
+ *           .withInterval(RequestInterval.exponential())
+ *           .withMaxAttempts(50)
+ * </pre>
+ */
 public final class JobCheckOptions implements IJobCheckOptions {
 
     private final ScheduledExecutorService scheduler;
