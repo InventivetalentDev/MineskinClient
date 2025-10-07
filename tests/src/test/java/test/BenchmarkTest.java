@@ -3,9 +3,11 @@ package test;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mineskin.*;
+import org.mineskin.data.Breadcrumbed;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
+import org.mineskin.request.backoff.RequestInterval;
 import org.mineskin.response.QueueResponse;
 
 import java.awt.image.BufferedImage;
@@ -36,7 +38,7 @@ public class BenchmarkTest {
     private static int GENERATE_INTERVAL_MS = 100;
     private static int GENERATE_CONCURRENCY = 20;
 
-    private static int GENERATE_AMOUNT = 50;
+    private static int GENERATE_AMOUNT = 200;
 
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -45,10 +47,12 @@ public class BenchmarkTest {
             .userAgent("MineSkinClient/Benchmark")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
             .generateExecutor(EXECUTOR)
-            .generateQueueOptions(new QueueOptions(
-                    Executors.newSingleThreadScheduledExecutor(),
-                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
-            ))
+//            .generateQueueOptions(new QueueOptions(
+//                    Executors.newSingleThreadScheduledExecutor(),
+//                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
+//            ))
+            .generateQueueOptions(QueueOptions.createAutoGenerate())
+            .jobCheckOptions(JobCheckOptions.create().withUseEta().withInterval(RequestInterval.exponential()).withMaxAttempts(50))
             .build();
 
     private final AtomicInteger per10s = new AtomicInteger();
@@ -138,6 +142,9 @@ public class BenchmarkTest {
                         total.incrementAndGet();
                     })
                     .exceptionally(throwable -> {
+                        if (throwable instanceof CompletionException e && e.getCause() instanceof Breadcrumbed breadcrumb) {
+                            log(breadcrumb.getBreadcrumb() + " (exception 1)");
+                        }
                         if (throwable instanceof CompletionException e && e.getCause() instanceof MineSkinRequestException req) {
                             log(req.getResponse());
                         } else {
@@ -147,6 +154,9 @@ public class BenchmarkTest {
                     })
                     .join();
         } catch (CompletionException | InterruptedException e) {
+            if (e.getCause() instanceof Breadcrumbed breadcrumb) {
+                log(breadcrumb.getBreadcrumb() + " (exception 2)");
+            }
             if (e.getCause() instanceof MineSkinRequestException req) {
                 log(req.getResponse());
             }

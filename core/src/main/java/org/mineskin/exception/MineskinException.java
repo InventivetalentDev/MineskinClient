@@ -1,6 +1,11 @@
 package org.mineskin.exception;
 
-public class MineskinException extends RuntimeException {
+import javax.annotation.Nullable;
+
+public class MineskinException extends RuntimeException implements IBreadcrumbException {
+
+    private String breadcrumb;
+
     public MineskinException() {
     }
 
@@ -19,4 +24,16 @@ public class MineskinException extends RuntimeException {
     public MineskinException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
+
+    public MineskinException withBreadcrumb(String breadcrumb) {
+        this.breadcrumb = breadcrumb;
+        return this;
+    }
+
+    @Nullable
+    @Override
+    public String getBreadcrumb() {
+        return breadcrumb;
+    }
+
 }

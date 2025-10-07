@@ -2,7 +2,7 @@ package org.mineskin.exception;
 
 import org.mineskin.response.MineSkinResponse;
 
-public class MineSkinRequestException extends RuntimeException {
+public class MineSkinRequestException extends RuntimeException implements IBreadcrumbException  {
 
     private final String code;
     private final MineSkinResponse<?> response;
@@ -22,4 +22,11 @@ public class MineSkinRequestException extends RuntimeException {
     public MineSkinResponse<?> getResponse() {
         return response;
     }
+
+    @Override
+    public String getBreadcrumb() {
+        if (response == null) return null;
+        return response.getBreadcrumb();
+    }
+
 }

@@ -43,6 +43,11 @@ public class MineSkinClientImpl implements MineSkinClient {
         this.getQueue = new RequestQueue(executors.getQueueOptions());
     }
 
+    @Override
+    public Logger getLogger() {
+        return LOGGER;
+    }
+
     /// //
 
 

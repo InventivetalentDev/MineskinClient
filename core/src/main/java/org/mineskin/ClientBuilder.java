@@ -1,6 +1,7 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
+import org.mineskin.options.AutoGenerateQueueOptions;
 import org.mineskin.options.IJobCheckOptions;
 import org.mineskin.options.IQueueOptions;
 import org.mineskin.request.RequestHandler;
@@ -115,6 +116,7 @@ public class ClientBuilder {
     /**
      * Set the options for submitting queue jobs<br/>
      * defaults to 200ms interval and 1 concurrent request
+     *
      * @see QueueOptions
      */
     public ClientBuilder generateQueueOptions(IQueueOptions queueOptions) {
@@ -136,6 +138,7 @@ public class ClientBuilder {
     /**
      * Set the options for get requests, e.g. getting skins<br/>
      * defaults to 100ms interval and 5 concurrent requests
+     *
      * @see QueueOptions
      */
     public ClientBuilder getQueueOptions(IQueueOptions queueOptions) {
@@ -150,13 +153,14 @@ public class ClientBuilder {
      */
     @Deprecated
     public ClientBuilder jobCheckScheduler(ScheduledExecutorService scheduledExecutor) {
-        this.jobCheckOptions = new JobCheckOptions(scheduledExecutor, DEFAULT_JOB_CHECK_INTERVAL, DEFAULT_JOB_CHECK_INITIAL_DELAY, DEFAULT_JOB_CHECK_MAX_ATTEMPTS);
+        this.jobCheckOptions = new JobCheckOptions(scheduledExecutor, DEFAULT_JOB_CHECK_INTERVAL, DEFAULT_JOB_CHECK_INITIAL_DELAY, DEFAULT_JOB_CHECK_MAX_ATTEMPTS, false);
         return this;
     }
 
     /**
      * Set the options for checking job status<br/>
      * defaults to 1000ms interval, 2000ms initial delay, and 10 max attempts
+     *
      * @see JobCheckOptions
      */
     public ClientBuilder jobCheckOptions(IJobCheckOptions jobCheckOptions) {
@@ -231,13 +235,18 @@ public class ClientBuilder {
                     generateQueueOptions.scheduler(),
                     DEFAULT_JOB_CHECK_INTERVAL,
                     DEFAULT_JOB_CHECK_INITIAL_DELAY,
-                    DEFAULT_JOB_CHECK_MAX_ATTEMPTS
+                    DEFAULT_JOB_CHECK_MAX_ATTEMPTS,
+                    false
             );
         }
 
         RequestHandler requestHandler = requestHandlerConstructor.construct(baseUrl, userAgent, apiKey, timeout, gson);
         RequestExecutors executors = new RequestExecutors(getExecutor, generateExecutor, generateQueueOptions, getQueueOptions, jobCheckOptions);
-        return new MineSkinClientImpl(requestHandler, executors);
+        MineSkinClientImpl client = new MineSkinClientImpl(requestHandler, executors);
+        if (executors.generateQueueOptions() instanceof AutoGenerateQueueOptions autoGenerate) {
+            autoGenerate.setClient(client);
+        }
+        return client;
     }
 
 }
