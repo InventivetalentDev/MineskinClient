@@ -32,6 +32,7 @@ public class JobResponseImpl extends AbstractMineSkinResponse<JobInfo> implement
     @Override
     public CompletableFuture<SkinInfo> getOrLoadSkin(MineSkinClient client) {
         if (this.skin != null) {
+            this.skin.setBreadcrumb(getBreadcrumb());
             return CompletableFuture.completedFuture(this.skin);
         } else {
             return getJob().getSkin(client).thenApply(skin -> {
