@@ -12,6 +12,7 @@ import org.mineskin.response.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -171,6 +172,18 @@ public class MineSkinClientImpl implements MineSkinClient {
             return CompletableFuture.supplyAsync(() -> {
                 try {
                     return requestHandler.getJson("/v2/queue/" + id, JobInfo.class, JobResponseImpl::new);
+                } catch (IOException e) {
+                    throw new MineskinException(e);
+                }
+            }, executors.getExecutor());
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public CompletableFuture<JobListResponse> list() {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return requestHandler.getJson("/v2/queue", (Class<List<JobInfo>>) (Class<?>) List.class, JobListResponseImpl::new);
                 } catch (IOException e) {
                     throw new MineskinException(e);
                 }

@@ -3,6 +3,7 @@ package org.mineskin;
 import org.mineskin.data.JobInfo;
 import org.mineskin.data.JobReference;
 import org.mineskin.request.GenerateRequest;
+import org.mineskin.response.JobListResponse;
 import org.mineskin.response.JobResponse;
 import org.mineskin.response.QueueResponse;
 
@@ -27,6 +28,12 @@ public interface QueueClient {
      * @see <a href="https://docs.mineskin.org/docs/mineskin-api/get-job-status">Get Job Status</a>
      */
     CompletableFuture<JobResponse> get(String id);
+
+    /**
+     * Get a list of recent queue jobs submitted by the current user.
+     * @see <a href="https://docs.mineskin.org/docs/mineskin-api/list-queue-jobs">List queue jobs</a>
+     */
+    CompletableFuture<JobListResponse> list();
 
     /**
      * Wait for a job to complete

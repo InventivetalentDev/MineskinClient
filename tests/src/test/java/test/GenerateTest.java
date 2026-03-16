@@ -11,6 +11,7 @@ import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
 import org.mineskin.response.GenerateResponse;
+import org.mineskin.response.JobListResponse;
 import org.mineskin.response.JobResponse;
 import org.mineskin.response.QueueResponse;
 
@@ -19,10 +20,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -279,6 +277,22 @@ public class GenerateTest {
             throw e;
         }
         Thread.sleep(1000);
+    }
+
+    @ParameterizedTest
+    @MethodSource("clients")
+    public void queueListTest(MineSkinClient client) throws InterruptedException {
+        JobListResponse response = client.queue().list().join();
+        assertNotNull(response);
+        List<JobInfo> jobs = response.getJobs();
+        assertNotNull(jobs);
+        assertFalse(jobs.isEmpty());
+        log(jobs);
+        JobInfo firstJob = jobs.get(0);
+        assertNotNull(firstJob);
+        log(firstJob);
+        assertFalse(firstJob.id().isEmpty());
+        assertTrue(firstJob.status().isDone());
     }
 
     /*
