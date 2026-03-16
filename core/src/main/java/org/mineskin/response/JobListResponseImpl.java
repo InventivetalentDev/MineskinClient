@@ -18,7 +18,7 @@ public class JobListResponseImpl extends AbstractMineSkinResponse<List<JobInfo>>
 
     @Override
     protected List<JobInfo> parseBody(JsonObject rawBody, Gson gson, String primaryField, Class<List<JobInfo>> clazz) {
-        return gson.fromJson(rawBody.get(primaryField), LIST_TYPE_TOKEN);
+        return gson.fromJson(rawBody.get(primaryField), LIST_TYPE_TOKEN.getType());
     }
 
     @Override
