@@ -9,6 +9,7 @@ import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
 import org.mineskin.request.backoff.RequestInterval;
 import org.mineskin.response.QueueResponse;
+import org.mineskin.response.UserResponse;
 
 import java.awt.image.BufferedImage;
 import java.text.SimpleDateFormat;
@@ -36,22 +37,23 @@ public class BenchmarkTest {
     }
 
     private static int GENERATE_INTERVAL_MS = 100;
-    private static int GENERATE_CONCURRENCY = 20;
+    private static int GENERATE_CONCURRENCY = 30;
 
-    private static int GENERATE_AMOUNT = 200;
+    private static int GENERATE_AMOUNT = 300;
 
-    private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final Executor GENERATE_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final Executor LOOP_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final MineSkinClient JAVA11 = MineSkinClient.builder()
             .requestHandler(Java11RequestHandler::new)
             .userAgent("MineSkinClient/Benchmark")
             .apiKey(System.getenv("MINESKIN_API_KEY"))
-            .generateExecutor(EXECUTOR)
-//            .generateQueueOptions(new QueueOptions(
-//                    Executors.newSingleThreadScheduledExecutor(),
-//                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
-//            ))
-            .generateQueueOptions(QueueOptions.createAutoGenerate())
+            .generateExecutor(GENERATE_EXECUTOR)
+            .generateQueueOptions(new QueueOptions(
+                    Executors.newSingleThreadScheduledExecutor(),
+                    GENERATE_INTERVAL_MS, GENERATE_CONCURRENCY
+            ))
+//            .generateQueueOptions(QueueOptions.createAutoGenerate())
             .jobCheckOptions(JobCheckOptions.create().withUseEta().withInterval(RequestInterval.exponential()).withMaxAttempts(50))
             .build();
 
@@ -69,6 +71,9 @@ public class BenchmarkTest {
         MineSkinClient client = JAVA11;
         int count = GENERATE_AMOUNT;
         Thread.sleep(1000);
+
+        UserResponse userResponse = client.misc().getUser().join();
+        System.out.println(userResponse);
 
         CompletableFuture.runAsync(() -> {
             while (total.get() < count) {
@@ -103,7 +108,7 @@ public class BenchmarkTest {
                 } catch (InterruptedException e) {
                     System.out.println(e);
                 }
-            }));
+            }, LOOP_EXECUTOR));
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
