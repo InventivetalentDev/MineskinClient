@@ -122,6 +122,10 @@ public abstract class AbstractMineSkinResponse<T> implements MineSkinResponse<T>
         return body;
     }
 
+    public JsonObject getRawBody() {
+        return rawBody;
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + "{" +
