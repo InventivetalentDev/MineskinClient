@@ -98,9 +98,11 @@ public class JobChecker {
                         jobInfo = info;
 //                        client.getLogger().log(Level.FINER, "ETA {0} {1}", new Object[]{info.eta(), info.getBreadcrumb()});
                     }
-                    if (jobInfo.status() == JobStatus.COMPLETED || jobInfo.status() == JobStatus.FAILED) {
+                    if (jobInfo.status() == JobStatus.FAILED ||
+                            (jobInfo.status() == JobStatus.COMPLETED && jobInfo.result().isPresent())) {
                         future.complete(response);
                     } else {
+                        // Either still pending, or completed but result not yet available (server-side race) — keep polling
                         executor.schedule(this::checkJob, interval.getInterval(attempt), timeUnit);
                     }
                 })
