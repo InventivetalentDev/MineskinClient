@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
-import org.mineskin.options.IJobCheckOptions;
 import org.mineskin.request.*;
 import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.*;
@@ -73,6 +72,22 @@ public class MineSkinClientImpl implements MineSkinClient {
     }
 
     class QueueClientImpl implements QueueClient {
+
+        private volatile JobBatchChecker jobBatchChecker;
+
+        private JobBatchChecker batchChecker() {
+            JobBatchChecker local = jobBatchChecker;
+            if (local == null) {
+                synchronized (this) {
+                    local = jobBatchChecker;
+                    if (local == null) {
+                        local = new JobBatchChecker(MineSkinClientImpl.this, executors.jobCheckOptions());
+                        jobBatchChecker = local;
+                    }
+                }
+            }
+            return local;
+        }
 
         @Override
         public CompletableFuture<QueueResponse> submit(GenerateRequest request) {
@@ -196,8 +211,7 @@ public class MineSkinClientImpl implements MineSkinClient {
             if (jobInfo.id() == null) {
                 return CompletableFuture.completedFuture(new NullJobReference(jobInfo));
             }
-            IJobCheckOptions options = executors.jobCheckOptions();
-            return new JobChecker(MineSkinClientImpl.this, jobInfo, options).check();
+            return batchChecker().register(jobInfo);
         }
 
 
