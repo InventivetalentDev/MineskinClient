@@ -3,7 +3,6 @@ package org.mineskin;
 import org.mineskin.data.JobInfo;
 import org.mineskin.data.JobReference;
 import org.mineskin.data.JobStatus;
-import org.mineskin.data.ListJobReferenceImpl;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.options.IJobCheckOptions;
 import org.mineskin.response.JobListResponse;
@@ -183,15 +182,10 @@ public class JobBatchChecker {
 
     private void handleStatus(Pending p, long now) {
         JobStatus status = p.jobInfo.status();
-        if (status == JobStatus.FAILED) {
-            // List endpoint doesn't return error details, and the result field is empty
-            // for failures — return a ListJobReferenceImpl so callers still get the updated JobInfo.
-            p.future.complete(new ListJobReferenceImpl(p.jobInfo));
-            pending.remove(p.jobInfo.id());
-            return;
-        }
-        if (status == JobStatus.COMPLETED && p.jobInfo.result().isPresent()) {
-            // List only has the skin uuid in `result`; fetch the full response for the skin object.
+        if (status == JobStatus.FAILED ||
+                (status == JobStatus.COMPLETED && p.jobInfo.result().isPresent())) {
+            // List response doesn't carry error details (for FAILED) or the skin object
+            // (for COMPLETED) — fetch the full per-job response so callers can read them.
             pending.remove(p.jobInfo.id());
             fetchFullAndComplete(p);
             return;

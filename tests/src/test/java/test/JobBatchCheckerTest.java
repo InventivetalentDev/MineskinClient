@@ -85,12 +85,12 @@ public class JobBatchCheckerTest {
             }
             assertFalse(futures.get(4).isDone(), "still-waiting job should not have completed");
 
-            // Each COMPLETED job should trigger exactly one per-job get() (for skin). FAILED should not.
+            // Each done job (COMPLETED or FAILED) should trigger exactly one per-job get() —
+            // for COMPLETED that fetches the skin object, for FAILED the error details.
             assertEquals(1, queue.getCallsForId.getOrDefault("job0", 0).intValue());
             assertEquals(1, queue.getCallsForId.getOrDefault("job1", 0).intValue());
             assertEquals(1, queue.getCallsForId.getOrDefault("job2", 0).intValue());
-            assertEquals(0, queue.getCallsForId.getOrDefault("job3", 0).intValue(),
-                    "FAILED jobs should be resolved from list response without a per-job get()");
+            assertEquals(1, queue.getCallsForId.getOrDefault("job3", 0).intValue());
         } finally {
             scheduler.shutdownNow();
         }
