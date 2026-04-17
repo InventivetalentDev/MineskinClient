@@ -4,6 +4,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mineskin.*;
 import org.mineskin.data.Breadcrumbed;
+import org.mineskin.data.JobStatus;
 import org.mineskin.data.Visibility;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.request.GenerateRequest;
@@ -137,6 +138,9 @@ public class BenchmarkTest {
                     .waitForCompletion(res.getJob())
                     .thenCompose(jobReference -> {
                         log("[" + index + "] " + res.getBreadcrumb() + " Job took " + (System.currentTimeMillis() - jobStart) + "ms");
+                        if (jobReference.getJob().status() == JobStatus.FAILED) {
+                            log("[" + index + "] " + res.getBreadcrumb() + " Job failed: " + jobReference.getJob().getBreadcrumb());
+                        }
                         return jobReference.getOrLoadSkin(client);
                     })
                     .thenAccept(skinInfo -> {
