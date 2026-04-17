@@ -138,6 +138,68 @@ public class JobBatchCheckerTest {
         }
     }
 
+    @Test
+    public void doesNotDoubleCountAttemptsDuringInflightList() throws Exception {
+        FakeQueueClient queue = new FakeQueueClient();
+        MineSkinClient client = new FakeMineSkinClient(queue);
+        for (int i = 0; i < 8; i++) {
+            queue.setStatus("job" + i, JobStatus.WAITING, null);
+        }
+
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        try {
+            // maxAttempts=3: if register() during an in-flight list() retriggers a tick
+            // that re-marks the original jobs as due, their attempts climb by one per
+            // racing register. Three rapid registers past maxAttempts=3 would trip
+            // "Max attempts reached" without the tick-side push-forward.
+            JobCheckOptions options = JobCheckOptions.create(scheduler)
+                    .withInitialDelay(30)
+                    .withInterval(RequestInterval.constant(40))
+                    .withMaxAttempts(3);
+            JobBatchChecker checker = new JobBatchChecker(client, options);
+
+            // Hold every list() response so the first tick's request stays in-flight
+            // the entire time new registrations land.
+            queue.holdAllListCalls = true;
+
+            List<CompletableFuture<JobReference>> futures = new ArrayList<>();
+            for (int i = 0; i < 5; i++) {
+                futures.add(checker.register(new JobInfo("job" + i, JobStatus.WAITING, System.currentTimeMillis(), null)));
+            }
+
+            // Wait until the first tick fires and stashes a list() call.
+            long deadline = System.currentTimeMillis() + 500;
+            while (queue.listCalls.get() < 1 && System.currentTimeMillis() < deadline) {
+                Thread.sleep(5);
+            }
+            assertTrue(queue.listCalls.get() >= 1, "first tick should have called list()");
+
+            // Race window: each of these registrations triggers rescheduleIfNeeded while
+            // the held list hasn't released; the sleep lets any scheduled tick actually fire.
+            for (int i = 5; i < 8; i++) {
+                futures.add(checker.register(new JobInfo("job" + i, JobStatus.WAITING, System.currentTimeMillis(), null)));
+                Thread.sleep(20);
+            }
+
+            // Mark everything COMPLETED and release all held list responses.
+            for (int i = 0; i < 8; i++) {
+                queue.setStatus("job" + i, JobStatus.COMPLETED, "uuid-" + i);
+            }
+            queue.releaseAllHeldLists();
+
+            // All futures should resolve normally. Without the tick-side push-forward,
+            // the original 5 would have tripped max-attempts during the race.
+            for (int i = 0; i < 8; i++) {
+                JobReference ref = awaitFuture(futures.get(i), 2000);
+                assertEquals("job" + i, ref.getJob().id());
+                assertFalse(futures.get(i).isCompletedExceptionally(),
+                        "future " + i + " should not have hit max attempts");
+            }
+        } finally {
+            scheduler.shutdownNow();
+        }
+    }
+
     private static JobReference awaitFuture(CompletableFuture<JobReference> future, long timeoutMs)
             throws InterruptedException, TimeoutException, ExecutionException {
         try {
@@ -168,9 +230,22 @@ public class JobBatchCheckerTest {
         final AtomicInteger listCalls = new AtomicInteger();
         final Map<String, Integer> getCallsForId = new ConcurrentHashMap<>();
         private final Map<String, JobInfo> state = new ConcurrentHashMap<>();
+        volatile boolean holdAllListCalls = false;
+        private final List<CompletableFuture<JobListResponse>> heldListFutures =
+                Collections.synchronizedList(new ArrayList<>());
 
         void setStatus(String id, JobStatus status, String result) {
             state.put(id, new JobInfo(id, status, System.currentTimeMillis(), result));
+        }
+
+        void releaseAllHeldLists() {
+            List<JobInfo> snapshot = new ArrayList<>(state.values());
+            synchronized (heldListFutures) {
+                for (CompletableFuture<JobListResponse> fut : heldListFutures) {
+                    fut.complete(new FakeJobListResponse(snapshot));
+                }
+                heldListFutures.clear();
+            }
         }
 
         @Override
@@ -194,6 +269,11 @@ public class JobBatchCheckerTest {
         @Override
         public CompletableFuture<JobListResponse> list() {
             listCalls.incrementAndGet();
+            if (holdAllListCalls) {
+                CompletableFuture<JobListResponse> fut = new CompletableFuture<>();
+                heldListFutures.add(fut);
+                return fut;
+            }
             List<JobInfo> snapshot = new ArrayList<>(state.values());
             return CompletableFuture.completedFuture(new FakeJobListResponse(snapshot));
         }

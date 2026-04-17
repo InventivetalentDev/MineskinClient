@@ -97,6 +97,11 @@ public class JobBatchChecker {
                 pending.remove(p.jobInfo.id());
                 continue;
             }
+            // Push nextCheckAt forward immediately so that a concurrent reschedule
+            // (e.g. from register()) arriving before the async response doesn't see
+            // this job as still-due and double-count its attempts. The response
+            // handler will overwrite with a correct `responseTime + interval`.
+            p.nextCheckAt = now + options.interval().getInterval(attempt);
             due.add(p);
         }
 
