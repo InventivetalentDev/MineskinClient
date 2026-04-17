@@ -35,13 +35,19 @@ public class JobBatchChecker {
 
     private final MineSkinClient client;
     private final IJobCheckOptions options;
+    private final Runnable onJobFailure;
 
     private final Map<String, Pending> pending = new ConcurrentHashMap<>();
     private ScheduledFuture<?> scheduledCheck;
 
     public JobBatchChecker(MineSkinClient client, IJobCheckOptions options) {
+        this(client, options, null);
+    }
+
+    public JobBatchChecker(MineSkinClient client, IJobCheckOptions options, Runnable onJobFailure) {
         this.client = client;
         this.options = options;
+        this.onJobFailure = onJobFailure;
     }
 
     /**
@@ -167,6 +173,9 @@ public class JobBatchChecker {
                             (status == JobStatus.COMPLETED && p.jobInfo.result().isPresent())) {
                         p.future.complete(response);
                         pending.remove(p.jobInfo.id());
+                        if (status == JobStatus.FAILED && onJobFailure != null) {
+                            onJobFailure.run();
+                        }
                     } else {
                         p.nextCheckAt = System.currentTimeMillis()
                                 + options.interval().getInterval(p.attempts.get());
@@ -187,6 +196,9 @@ public class JobBatchChecker {
             // List response doesn't carry error details (for FAILED) or the skin object
             // (for COMPLETED) — fetch the full per-job response so callers can read them.
             pending.remove(p.jobInfo.id());
+            if (status == JobStatus.FAILED && onJobFailure != null) {
+                onJobFailure.run();
+            }
             fetchFullAndComplete(p);
             return;
         }

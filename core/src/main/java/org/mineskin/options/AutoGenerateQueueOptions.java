@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongSupplier;
 import java.util.logging.Level;
 
 public class AutoGenerateQueueOptions implements IQueueOptions {
@@ -20,7 +21,13 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
     private static final int MIN_CONCURRENCY = 1;
     private static final int MAX_CONCURRENCY = 30;
 
+    private static final int FAILURE_STEP_MILLIS = 500;
+    private static final int MAX_PENALTY_MILLIS = 10_000;
+    private static final int DECAY_MILLIS_PER_SECOND = 100;
+    private static final int MAX_EFFECTIVE_INTERVAL_MILLIS = 10_000;
+
     private final ScheduledExecutorService scheduler;
+    private final LongSupplier clock;
     private MineSkinClient client;
 
     private final AtomicLong lastRefresh = new AtomicLong(0);
@@ -28,10 +35,18 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
     private final AtomicInteger intervalMillis = new AtomicInteger(MAX_INTERVAL_MILLIS);
     private final AtomicInteger concurrency = new AtomicInteger(MIN_INTERVAL_MILLIS);
 
+    private final AtomicInteger peakPenaltyMillis = new AtomicInteger(0);
+    private final AtomicLong lastFailureAt = new AtomicLong(0);
+
     public AutoGenerateQueueOptions(
             ScheduledExecutorService scheduler
     ) {
+        this(scheduler, System::currentTimeMillis);
+    }
+
+    AutoGenerateQueueOptions(ScheduledExecutorService scheduler, LongSupplier clock) {
         this.scheduler = scheduler;
+        this.clock = clock;
     }
 
     public AutoGenerateQueueOptions() {
@@ -55,13 +70,40 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
     @Override
     public int intervalMillis() {
         reloadIfNeeded();
-        return intervalMillis.get();
+        int effective = intervalMillis.get() + currentPenalty();
+        return Math.min(effective, MAX_EFFECTIVE_INTERVAL_MILLIS);
     }
 
     @Override
     public int concurrency() {
         reloadIfNeeded();
         return concurrency.get();
+    }
+
+    @Override
+    public void reportFailure() {
+        int penalty;
+        int baseline;
+        synchronized (this) {
+            int existing = currentPenalty();
+            penalty = Math.min(MAX_PENALTY_MILLIS, existing + FAILURE_STEP_MILLIS);
+            peakPenaltyMillis.set(penalty);
+            lastFailureAt.set(clock.getAsLong());
+            baseline = intervalMillis.get();
+        }
+        int effective = Math.min(baseline + penalty, MAX_EFFECTIVE_INTERVAL_MILLIS);
+        MineSkinClientImpl.LOGGER.log(Level.INFO,
+                "[QueueOptions] Slowing down after failure: penalty {0}ms, effective {1}ms (baseline {2}ms)",
+                new Object[]{penalty, effective, baseline});
+    }
+
+    private int currentPenalty() {
+        int peak = peakPenaltyMillis.get();
+        if (peak == 0) return 0;
+        long elapsed = clock.getAsLong() - lastFailureAt.get();
+        if (elapsed <= 0) return peak;
+        long decayed = peak - (elapsed * DECAY_MILLIS_PER_SECOND / 1000);
+        return (int) Math.max(0, decayed);
     }
 
     private void reloadIfNeeded() {
