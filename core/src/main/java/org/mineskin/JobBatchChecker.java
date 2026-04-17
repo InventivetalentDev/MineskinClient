@@ -3,7 +3,7 @@ package org.mineskin;
 import org.mineskin.data.JobInfo;
 import org.mineskin.data.JobReference;
 import org.mineskin.data.JobStatus;
-import org.mineskin.data.NullJobReference;
+import org.mineskin.data.ListJobReferenceImpl;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.options.IJobCheckOptions;
 import org.mineskin.response.JobListResponse;
@@ -185,8 +185,8 @@ public class JobBatchChecker {
         JobStatus status = p.jobInfo.status();
         if (status == JobStatus.FAILED) {
             // List endpoint doesn't return error details, and the result field is empty
-            // for failures — return a NullJobReference so callers still get the updated JobInfo.
-            p.future.complete(new NullJobReference(p.jobInfo));
+            // for failures — return a ListJobReferenceImpl so callers still get the updated JobInfo.
+            p.future.complete(new ListJobReferenceImpl(p.jobInfo));
             pending.remove(p.jobInfo.id());
             return;
         }

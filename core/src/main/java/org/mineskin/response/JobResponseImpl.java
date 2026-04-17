@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.mineskin.MineSkinClient;
 import org.mineskin.data.JobInfo;
+import org.mineskin.data.JobStatus;
 import org.mineskin.data.SkinInfo;
+import org.mineskin.exception.MineSkinRequestException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -31,15 +33,17 @@ public class JobResponseImpl extends AbstractMineSkinResponse<JobInfo> implement
 
     @Override
     public CompletableFuture<SkinInfo> getOrLoadSkin(MineSkinClient client) {
+        if (getJob().status() == JobStatus.FAILED) {
+            throw new MineSkinRequestException("job_failed", "Job failed", this);
+        }
         if (this.skin != null) {
             this.skin.setBreadcrumb(getBreadcrumb());
             return CompletableFuture.completedFuture(this.skin);
-        } else {
-            return getJob().getSkin(client).thenApply(skin -> {
-                this.skin = skin.getSkin();
-                return this.skin;
-            });
         }
+        return getJob().getSkin(client).thenApply(skin -> {
+            this.skin = skin.getSkin();
+            return this.skin;
+        });
     }
 
 }

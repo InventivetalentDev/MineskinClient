@@ -1,6 +1,7 @@
 package org.mineskin.data;
 
 import org.mineskin.MineSkinClient;
+import org.mineskin.exception.MineskinException;
 import org.mineskin.response.SkinResponse;
 
 import java.util.Optional;
@@ -12,10 +13,12 @@ public interface JobReference {
     Optional<SkinInfo> getSkin();
 
     default CompletableFuture<SkinInfo> getOrLoadSkin(MineSkinClient client) {
+        if (getJob().status() == JobStatus.FAILED) {
+            throw new MineskinException("Job failed").withBreadcrumb(getJob().getBreadcrumb());
+        }
         if (this.getSkin().isPresent()) {
             return CompletableFuture.completedFuture(this.getSkin().get());
-        } else {
-            return getJob().getSkin(client).thenApply(SkinResponse::getSkin);
         }
+        return getJob().getSkin(client).thenApply(SkinResponse::getSkin);
     }
 }
