@@ -34,7 +34,9 @@ public class JobResponseImpl extends AbstractMineSkinResponse<JobInfo> implement
     @Override
     public CompletableFuture<SkinInfo> getOrLoadSkin(MineSkinClient client) {
         if (getJob().status() == JobStatus.FAILED) {
-            throw new MineSkinRequestException("job_failed", "Job failed", this);
+            throw getFirstError()
+                    .map(error -> new MineSkinRequestException(error.code(), error.message(), this))
+                    .orElseGet(() -> new MineSkinRequestException("job_failed", "Job failed", this));
         }
         if (this.skin != null) {
             this.skin.setBreadcrumb(getBreadcrumb());
