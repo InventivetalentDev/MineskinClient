@@ -66,6 +66,9 @@ public class JobInfo implements MutableBreadcrumbed {
     }
 
     public CompletableFuture<SkinResponse> getSkin(MineSkinClient client) {
+        if (status() == JobStatus.FAILED) {
+            throw new MineskinException("Job failed").withBreadcrumb(getBreadcrumb());
+        }
         if (result == null) {
             throw new MineskinException("Job is not completed yet").withBreadcrumb(getBreadcrumb());
         }
