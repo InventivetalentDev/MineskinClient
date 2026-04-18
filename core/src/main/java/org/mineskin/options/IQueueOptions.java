@@ -20,10 +20,4 @@ public interface IQueueOptions {
     default void reportFailure() {
     }
 
-    /**
-     * Report that a job handled by this queue succeeded. Reserved for future use
-     * by adaptive implementations. No-op by default.
-     */
-    default void reportSuccess() {
-    }
 }
