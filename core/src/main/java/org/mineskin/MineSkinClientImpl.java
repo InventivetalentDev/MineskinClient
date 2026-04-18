@@ -81,7 +81,11 @@ public class MineSkinClientImpl implements MineSkinClient {
                 synchronized (this) {
                     local = jobBatchChecker;
                     if (local == null) {
-                        local = new JobBatchChecker(MineSkinClientImpl.this, executors.jobCheckOptions());
+                        local = new JobBatchChecker(
+                                MineSkinClientImpl.this,
+                                executors.jobCheckOptions(),
+                                executors.generateQueueOptions()::reportFailure
+                        );
                         jobBatchChecker = local;
                     }
                 }

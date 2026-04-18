@@ -27,8 +27,13 @@ public class JobChecker {
     private final RequestInterval interval;
     private final TimeUnit timeUnit;
     private final boolean useEta;
+    private final Runnable onJobFailure;
 
     public JobChecker(MineSkinClient client, JobInfo jobInfo, IJobCheckOptions options) {
+        this(client, jobInfo, options, null);
+    }
+
+    public JobChecker(MineSkinClient client, JobInfo jobInfo, IJobCheckOptions options, Runnable onJobFailure) {
         this.client = client;
         this.jobInfo = jobInfo;
         this.executor = options.scheduler();
@@ -37,6 +42,7 @@ public class JobChecker {
         this.interval = options.interval();
         this.timeUnit = TimeUnit.MILLISECONDS;
         this.useEta = options.useEta();
+        this.onJobFailure = onJobFailure;
     }
 
     @Deprecated
@@ -59,6 +65,7 @@ public class JobChecker {
         this.interval = RequestInterval.constant((int) timeUnit.toMillis(interval));
         this.timeUnit = timeUnit;
         this.useEta = useEta;
+        this.onJobFailure = null;
     }
 
     /**
@@ -101,6 +108,9 @@ public class JobChecker {
                     if (jobInfo.status() == JobStatus.FAILED ||
                             (jobInfo.status() == JobStatus.COMPLETED && jobInfo.result().isPresent())) {
                         future.complete(response);
+                        if (jobInfo.status() == JobStatus.FAILED && onJobFailure != null) {
+                            onJobFailure.run();
+                        }
                     } else {
                         // Either still pending, or completed but result not yet available (server-side race) — keep polling
                         executor.schedule(this::checkJob, interval.getInterval(attempt), timeUnit);

@@ -11,4 +11,13 @@ public interface IQueueOptions {
     int intervalMillis();
 
     int concurrency();
+
+    /**
+     * Report that a job handled by this queue failed. Adaptive implementations
+     * (see {@link AutoGenerateQueueOptions}) use this signal to temporarily slow
+     * down the request rate. No-op by default.
+     */
+    default void reportFailure() {
+    }
+
 }
