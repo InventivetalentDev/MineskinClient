@@ -2,9 +2,9 @@ package org.mineskin;
 
 import org.mineskin.options.IQueueOptions;
 
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -14,7 +14,7 @@ import java.util.logging.Level;
 
 public class RequestQueue {
 
-    private final Queue<Supplier<CompletableFuture<?>>> queue = new LinkedList<>();
+    private final Queue<Supplier<CompletableFuture<?>>> queue = new ConcurrentLinkedQueue<>();
     private final AtomicInteger running = new AtomicInteger(0);
 
     private final ScheduledExecutorService executor;
@@ -61,7 +61,12 @@ public class RequestQueue {
         if ((supplier = queue.poll()) != null) {
             MineSkinClientImpl.LOGGER.log(Level.FINER, "Processing request, running {0} tasks", running.get());
             running.incrementAndGet();
-            supplier.get();
+            try {
+                supplier.get();
+            } catch (Throwable t) {
+                running.decrementAndGet();
+                throw t;
+            }
         }
     }
 
