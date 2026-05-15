@@ -10,6 +10,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -19,6 +20,9 @@ import org.mineskin.data.CodeAndMessage;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
+import org.mineskin.request.RequestHandlerConstructor;
+import org.mineskin.request.RequestInterceptor;
+import org.mineskin.request.ResponseInterceptor;
 import org.mineskin.response.MineSkinResponse;
 import org.mineskin.response.ResponseConstructor;
 
@@ -38,14 +42,28 @@ public class ApacheRequestHandler extends RequestHandler {
     private final Gson gson;
 
     private final HttpClient httpClient;
+    private final List<RequestInterceptor<HttpUriRequest>> requestInterceptors;
+    private final List<ResponseInterceptor<HttpResponse>> responseInterceptors;
 
     public ApacheRequestHandler(
             String baseUrl,
             String userAgent, String apiKey,
             int timeout,
             Gson gson) {
+        this(baseUrl, userAgent, apiKey, timeout, gson, List.of(), List.of());
+    }
+
+    private ApacheRequestHandler(
+            String baseUrl,
+            String userAgent, String apiKey,
+            int timeout,
+            Gson gson,
+            List<RequestInterceptor<HttpUriRequest>> requestInterceptors,
+            List<ResponseInterceptor<HttpResponse>> responseInterceptors) {
         super(baseUrl, userAgent, apiKey, timeout, gson);
         this.gson = gson;
+        this.requestInterceptors = requestInterceptors;
+        this.responseInterceptors = responseInterceptors;
 
         List<Header> defaultHeaders = new ArrayList<>();
         if (apiKey != null) {
@@ -63,7 +81,37 @@ public class ApacheRequestHandler extends RequestHandler {
                 .build();
     }
 
+    /**
+     * Start building an {@link ApacheRequestHandler} with the given request interceptor.
+     * The returned {@link Builder} implements {@link RequestHandlerConstructor} and can be passed
+     * directly to {@link ClientBuilder#requestHandler(RequestHandlerConstructor)}.
+     */
+    public static Builder withRequestInterceptor(RequestInterceptor<HttpUriRequest> interceptor) {
+        return new Builder().withRequestInterceptor(interceptor);
+    }
+
+    /**
+     * Start building an {@link ApacheRequestHandler} with the given response interceptor.
+     * <p>
+     * Note: reading the entity body via {@code response.getEntity().getContent()} inside an
+     * interceptor will consume the stream and break internal JSON parsing. Status code and
+     * headers are always safe to inspect.
+     */
+    public static Builder withResponseInterceptor(ResponseInterceptor<HttpResponse> interceptor) {
+        return new Builder().withResponseInterceptor(interceptor);
+    }
+
+    private HttpResponse execute(HttpUriRequest request) throws IOException {
+        for (RequestInterceptor<HttpUriRequest> interceptor : requestInterceptors) {
+            interceptor.intercept(request);
+        }
+        return this.httpClient.execute(request);
+    }
+
     private <T, R extends MineSkinResponse<T>> R wrapResponse(HttpResponse response, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        for (ResponseInterceptor<HttpResponse> interceptor : responseInterceptors) {
+            interceptor.intercept(response);
+        }
         String rawBody = null;
         try {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
@@ -103,7 +151,7 @@ public class ApacheRequestHandler extends RequestHandler {
     public <T, R extends MineSkinResponse<T>> R getJson(String url, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
         url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.fine("GET " + url);
-        HttpResponse response = this.httpClient.execute(new HttpGet(url));
+        HttpResponse response = execute(new HttpGet(url));
         return wrapResponse(response, clazz, constructor);
     }
 
@@ -115,7 +163,7 @@ public class ApacheRequestHandler extends RequestHandler {
         post.setHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
         StringEntity entity = new StringEntity(gson.toJson(data), ContentType.APPLICATION_JSON);
         post.setEntity(entity);
-        HttpResponse response = this.httpClient.execute(post);
+        HttpResponse response = execute(post);
         return wrapResponse(response, clazz, constructor);
     }
 
@@ -132,8 +180,38 @@ public class ApacheRequestHandler extends RequestHandler {
         }
         HttpEntity entity = multipart.build();
         post.setEntity(entity);
-        HttpResponse response = this.httpClient.execute(post);
+        HttpResponse response = execute(post);
         return wrapResponse(response, clazz, constructor);
+    }
+
+    /**
+     * Builder for an {@link ApacheRequestHandler} configured with request and/or response interceptors.
+     * Implements {@link RequestHandlerConstructor} so it can be passed directly to
+     * {@link ClientBuilder#requestHandler(RequestHandlerConstructor)}.
+     */
+    public static final class Builder implements RequestHandlerConstructor {
+
+        private final List<RequestInterceptor<HttpUriRequest>> requestInterceptors = new ArrayList<>();
+        private final List<ResponseInterceptor<HttpResponse>> responseInterceptors = new ArrayList<>();
+
+        private Builder() {
+        }
+
+        public Builder withRequestInterceptor(RequestInterceptor<HttpUriRequest> interceptor) {
+            this.requestInterceptors.add(interceptor);
+            return this;
+        }
+
+        public Builder withResponseInterceptor(ResponseInterceptor<HttpResponse> interceptor) {
+            this.responseInterceptors.add(interceptor);
+            return this;
+        }
+
+        @Override
+        public RequestHandler construct(String baseUrl, String userAgent, String apiKey, int timeout, Gson gson) {
+            return new ApacheRequestHandler(baseUrl, userAgent, apiKey, timeout, gson,
+                    List.copyOf(requestInterceptors), List.copyOf(responseInterceptors));
+        }
     }
 
 }
