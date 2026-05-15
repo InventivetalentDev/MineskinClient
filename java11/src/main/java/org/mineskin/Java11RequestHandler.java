@@ -7,6 +7,9 @@ import org.mineskin.data.CodeAndMessage;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
+import org.mineskin.request.RequestHandlerConstructor;
+import org.mineskin.request.RequestInterceptor;
+import org.mineskin.request.ResponseInterceptor;
 import org.mineskin.response.MineSkinResponse;
 import org.mineskin.response.ResponseConstructor;
 
@@ -15,9 +18,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -26,10 +31,20 @@ public class Java11RequestHandler extends RequestHandler {
 
     private final Gson gson;
     private final HttpClient httpClient;
+    private final List<RequestInterceptor<HttpRequest.Builder>> requestInterceptors;
+    private final List<ResponseInterceptor<HttpResponse<String>>> responseInterceptors;
 
     public Java11RequestHandler(String baseUrl, String userAgent, String apiKey, int timeout, Gson gson) {
+        this(baseUrl, userAgent, apiKey, timeout, gson, List.of(), List.of());
+    }
+
+    private Java11RequestHandler(String baseUrl, String userAgent, String apiKey, int timeout, Gson gson,
+                                 List<RequestInterceptor<HttpRequest.Builder>> requestInterceptors,
+                                 List<ResponseInterceptor<HttpResponse<String>>> responseInterceptors) {
         super(baseUrl, userAgent, apiKey, timeout, gson);
         this.gson = gson;
+        this.requestInterceptors = requestInterceptors;
+        this.responseInterceptors = responseInterceptors;
 
         HttpClient.Builder clientBuilder = HttpClient.newBuilder()
                 .connectTimeout(java.time.Duration.ofMillis(timeout));
@@ -40,7 +55,28 @@ public class Java11RequestHandler extends RequestHandler {
         this.httpClient = clientBuilder.build();
     }
 
+    /**
+     * Start building a {@link Java11RequestHandler} with the given request interceptor.
+     * The returned {@link Builder} implements {@link RequestHandlerConstructor} and can be passed
+     * directly to {@link ClientBuilder#requestHandler(RequestHandlerConstructor)}.
+     */
+    public static Builder withRequestInterceptor(RequestInterceptor<HttpRequest.Builder> interceptor) {
+        return new Builder().withRequestInterceptor(interceptor);
+    }
+
+    /**
+     * Start building a {@link Java11RequestHandler} with the given response interceptor.
+     * The returned {@link Builder} implements {@link RequestHandlerConstructor} and can be passed
+     * directly to {@link ClientBuilder#requestHandler(RequestHandlerConstructor)}.
+     */
+    public static Builder withResponseInterceptor(ResponseInterceptor<HttpResponse<String>> interceptor) {
+        return new Builder().withResponseInterceptor(interceptor);
+    }
+
     private <T, R extends MineSkinResponse<T>> R wrapResponse(HttpResponse<String> response, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
+        for (ResponseInterceptor<HttpResponse<String>> interceptor : responseInterceptors) {
+            interceptor.intercept(response);
+        }
         String rawBody = response.body();
         try {
             JsonObject jsonBody = gson.fromJson(rawBody, JsonObject.class);
@@ -72,22 +108,26 @@ public class Java11RequestHandler extends RequestHandler {
                 ));
     }
 
+    private HttpRequest buildRequest(HttpRequest.Builder requestBuilder) {
+        if (apiKey != null) {
+            requestBuilder
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Accept", "application/json");
+        }
+        for (RequestInterceptor<HttpRequest.Builder> interceptor : requestInterceptors) {
+            interceptor.intercept(requestBuilder);
+        }
+        return requestBuilder.build();
+    }
+
     public <T, R extends MineSkinResponse<T>> R getJson(String url, Class<T> clazz, ResponseConstructor<T, R> constructor) throws IOException {
         url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.fine("GET " + url);
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        HttpRequest request = buildRequest(HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .GET()
-                .header("User-Agent", this.userAgent);
-        HttpRequest request;
-        if (apiKey != null) {
-            request = requestBuilder
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Accept", "application/json").build();
-        } else {
-            request = requestBuilder.build();
-        }
+                .header("User-Agent", this.userAgent));
         HttpResponse<String> response;
         try {
             response = this.httpClient.send(request, BodyHandlers.ofString());
@@ -101,19 +141,11 @@ public class Java11RequestHandler extends RequestHandler {
         url = this.baseUrl + url;
         MineSkinClientImpl.LOGGER.fine("POST " + url);
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        HttpRequest request = buildRequest(HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .POST(BodyPublishers.ofString(gson.toJson(data)))
                 .header("Content-Type", "application/json")
-                .header("User-Agent", this.userAgent);
-        HttpRequest request;
-        if (apiKey != null) {
-            request = requestBuilder
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Accept", "application/json").build();
-        } else {
-            request = requestBuilder.build();
-        }
+                .header("User-Agent", this.userAgent));
 
         HttpResponse<String> response;
         try {
@@ -151,19 +183,11 @@ public class Java11RequestHandler extends RequestHandler {
         System.arraycopy(fileContent, 0, bodyString, bodyStart.length, fileContent.length);
         System.arraycopy(boundaryEnd, 0, bodyString, bodyStart.length + fileContent.length, boundaryEnd.length);
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        HttpRequest request = buildRequest(HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(bodyString))
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                .header("User-Agent", this.userAgent);
-        HttpRequest request;
-        if (apiKey != null) {
-            request = requestBuilder
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Accept", "application/json").build();
-        } else {
-            request = requestBuilder.build();
-        }
+                .header("User-Agent", this.userAgent));
 
         HttpResponse<String> response;
         try {
@@ -172,5 +196,35 @@ public class Java11RequestHandler extends RequestHandler {
             throw new RuntimeException(e);
         }
         return wrapResponse(response, clazz, constructor);
+    }
+
+    /**
+     * Builder for a {@link Java11RequestHandler} configured with request and/or response interceptors.
+     * Implements {@link RequestHandlerConstructor} so it can be passed directly to
+     * {@link ClientBuilder#requestHandler(RequestHandlerConstructor)}.
+     */
+    public static final class Builder implements RequestHandlerConstructor {
+
+        private final List<RequestInterceptor<HttpRequest.Builder>> requestInterceptors = new ArrayList<>();
+        private final List<ResponseInterceptor<HttpResponse<String>>> responseInterceptors = new ArrayList<>();
+
+        private Builder() {
+        }
+
+        public Builder withRequestInterceptor(RequestInterceptor<HttpRequest.Builder> interceptor) {
+            this.requestInterceptors.add(interceptor);
+            return this;
+        }
+
+        public Builder withResponseInterceptor(ResponseInterceptor<HttpResponse<String>> interceptor) {
+            this.responseInterceptors.add(interceptor);
+            return this;
+        }
+
+        @Override
+        public RequestHandler construct(String baseUrl, String userAgent, String apiKey, int timeout, Gson gson) {
+            return new Java11RequestHandler(baseUrl, userAgent, apiKey, timeout, gson,
+                    List.copyOf(requestInterceptors), List.copyOf(responseInterceptors));
+        }
     }
 }
