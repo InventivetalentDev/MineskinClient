@@ -128,15 +128,15 @@ public class JsoupRequestHandler extends RequestHandler {
         try {
             parsed = gson.fromJson(response.body(), JsonElement.class);
         } catch (JsonParseException e) {
-            return syntheticErrorBody(response, "invalid_json", e.getMessage());
+            return syntheticErrorBody("invalid_json", e.getMessage());
         }
         if (parsed != null && parsed.isJsonObject()) return parsed.getAsJsonObject();
         String snippet = response.body() == null ? "null" : response.body();
         if (snippet.length() > 200) snippet = snippet.substring(0, 200) + "...";
-        return syntheticErrorBody(response, "non_json_response", "HTTP " + response.statusCode() + ": " + snippet);
+        return syntheticErrorBody("non_json_response", "HTTP " + response.statusCode() + ": " + snippet);
     }
 
-    private JsonObject syntheticErrorBody(Connection.Response response, String code, String message) {
+    private JsonObject syntheticErrorBody(String code, String message) {
         JsonObject error = new JsonObject();
         error.add("code", new JsonPrimitive(code));
         error.add("message", new JsonPrimitive(message == null ? "" : message));
