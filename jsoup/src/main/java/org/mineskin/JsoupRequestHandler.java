@@ -1,8 +1,11 @@
 package org.mineskin;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.mineskin.data.CodeAndMessage;
@@ -99,7 +102,7 @@ public class JsoupRequestHandler extends RequestHandler {
             interceptor.intercept(response);
         }
         try {
-            JsonObject jsonBody = gson.fromJson(response.body(), JsonObject.class);
+            JsonObject jsonBody = parseJsonBody(response);
             R wrapped = constructor.construct(
                     response.statusCode(),
                     lowercaseHeaders(response.headers()),
@@ -118,6 +121,31 @@ public class JsoupRequestHandler extends RequestHandler {
             MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to parse response body: " + response.body(), e);
             throw new MineskinException("Failed to parse response", e);
         }
+    }
+
+    private JsonObject parseJsonBody(Connection.Response response) {
+        JsonElement parsed;
+        try {
+            parsed = gson.fromJson(response.body(), JsonElement.class);
+        } catch (JsonParseException e) {
+            return syntheticErrorBody(response, "invalid_json", e.getMessage());
+        }
+        if (parsed != null && parsed.isJsonObject()) return parsed.getAsJsonObject();
+        String snippet = response.body() == null ? "null" : response.body();
+        if (snippet.length() > 200) snippet = snippet.substring(0, 200) + "...";
+        return syntheticErrorBody(response, "non_json_response", "HTTP " + response.statusCode() + ": " + snippet);
+    }
+
+    private JsonObject syntheticErrorBody(Connection.Response response, String code, String message) {
+        JsonObject error = new JsonObject();
+        error.add("code", new JsonPrimitive(code));
+        error.add("message", new JsonPrimitive(message == null ? "" : message));
+        JsonArray errors = new JsonArray();
+        errors.add(error);
+        JsonObject body = new JsonObject();
+        body.add("success", new JsonPrimitive(false));
+        body.add("errors", errors);
+        return body;
     }
 
     private Map<String, String> lowercaseHeaders(Map<String, String> headers) {
