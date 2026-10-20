@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import org.mineskin.data.*;
 import org.mineskin.exception.MineSkinRequestException;
 import org.mineskin.exception.MineskinException;
+import org.mineskin.exception.UnexpectedResponseException;
 import org.mineskin.request.*;
 import org.mineskin.request.source.UploadSource;
 import org.mineskin.response.*;
@@ -46,6 +47,16 @@ public class MineSkinClientImpl implements MineSkinClient {
     @Override
     public Logger getLogger() {
         return LOGGER;
+    }
+
+    /**
+     * Slow down the generate queue while the API is returning temporary non-JSON errors (e.g. Cloudflare 5xx)
+     */
+    private void handleUnexpectedResponse(UnexpectedResponseException e) {
+        if (!e.isRetryable()) return;
+        executors.generateQueueOptions().reportFailure();
+        e.getRetryAfterMillis().ifPresent(retryAfter ->
+                generateQueue.setNextRequest(Math.max(generateQueue.getNextRequest(), System.currentTimeMillis() + retryAfter)));
     }
 
     /// //
@@ -123,6 +134,9 @@ public class MineSkinClientImpl implements MineSkinClient {
                 } catch (MineSkinRequestException e) {
                     handleGenerateResponse(e.getResponse());
                     throw e;
+                } catch (UnexpectedResponseException e) {
+                    handleUnexpectedResponse(e);
+                    throw e;
                 }
             }, executors.generateExecutor());
         }
@@ -144,6 +158,9 @@ public class MineSkinClientImpl implements MineSkinClient {
                 } catch (MineSkinRequestException e) {
                     handleGenerateResponse(e.getResponse());
                     throw e;
+                } catch (UnexpectedResponseException e) {
+                    handleUnexpectedResponse(e);
+                    throw e;
                 }
             }, executors.generateExecutor());
         }
@@ -164,6 +181,9 @@ public class MineSkinClientImpl implements MineSkinClient {
                     throw new MineskinException(e);
                 } catch (MineSkinRequestException e) {
                     handleGenerateResponse(e.getResponse());
+                    throw e;
+                } catch (UnexpectedResponseException e) {
+                    handleUnexpectedResponse(e);
                     throw e;
                 }
             }, executors.generateExecutor());
@@ -253,6 +273,9 @@ public class MineSkinClientImpl implements MineSkinClient {
                 } catch (MineSkinRequestException e) {
                     handleGenerateResponse(e.getResponse());
                     throw e;
+                } catch (UnexpectedResponseException e) {
+                    handleUnexpectedResponse(e);
+                    throw e;
                 }
             }, executors.generateExecutor());
         }
@@ -274,6 +297,9 @@ public class MineSkinClientImpl implements MineSkinClient {
                 } catch (MineSkinRequestException e) {
                     handleGenerateResponse(e.getResponse());
                     throw e;
+                } catch (UnexpectedResponseException e) {
+                    handleUnexpectedResponse(e);
+                    throw e;
                 }
             }, executors.generateExecutor());
         }
@@ -294,6 +320,9 @@ public class MineSkinClientImpl implements MineSkinClient {
                     throw new MineskinException(e);
                 } catch (MineSkinRequestException e) {
                     handleGenerateResponse(e.getResponse());
+                    throw e;
+                } catch (UnexpectedResponseException e) {
+                    handleUnexpectedResponse(e);
                     throw e;
                 }
             }, executors.generateExecutor());

@@ -2,12 +2,8 @@ package org.mineskin;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.mineskin.data.CodeAndMessage;
-import org.mineskin.exception.MineSkinRequestException;
-import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
 import org.mineskin.request.RequestInterceptor;
@@ -98,26 +94,7 @@ public class JsoupRequestHandler extends RequestHandler {
         for (ResponseInterceptor<Connection.Response> interceptor : responseInterceptors) {
             interceptor.intercept(response);
         }
-        try {
-            JsonObject jsonBody = gson.fromJson(response.body(), JsonObject.class);
-            R wrapped = constructor.construct(
-                    response.statusCode(),
-                    lowercaseHeaders(response.headers()),
-                    jsonBody,
-                    gson, clazz
-            );
-            if (!wrapped.isSuccess()) {
-                throw new MineSkinRequestException(
-                        wrapped.getFirstError().map(CodeAndMessage::code).orElse("request_failed"),
-                        wrapped.getFirstError().map(CodeAndMessage::message).orElse("Request Failed"),
-                        wrapped
-                );
-            }
-            return wrapped;
-        } catch (JsonParseException e) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to parse response body: " + response.body(), e);
-            throw new MineskinException("Failed to parse response", e);
-        }
+        return handleResponse(response.statusCode(), lowercaseHeaders(response.headers()), response.body(), clazz, constructor);
     }
 
     private Map<String, String> lowercaseHeaders(Map<String, String> headers) {

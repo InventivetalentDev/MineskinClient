@@ -2,10 +2,6 @@ package org.mineskin;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import org.mineskin.data.CodeAndMessage;
-import org.mineskin.exception.MineSkinRequestException;
-import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
 import org.mineskin.request.RequestInterceptor;
@@ -24,7 +20,6 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class Java11RequestHandler extends RequestHandler {
@@ -77,27 +72,7 @@ public class Java11RequestHandler extends RequestHandler {
         for (ResponseInterceptor<HttpResponse<String>> interceptor : responseInterceptors) {
             interceptor.intercept(response);
         }
-        String rawBody = response.body();
-        try {
-            JsonObject jsonBody = gson.fromJson(rawBody, JsonObject.class);
-            R wrapped = constructor.construct(
-                    response.statusCode(),
-                    lowercaseHeaders(response.headers().map()),
-                    jsonBody,
-                    gson, clazz
-            );
-            if (!wrapped.isSuccess()) {
-                throw new MineSkinRequestException(
-                        wrapped.getFirstError().map(CodeAndMessage::code).orElse("request_failed"),
-                        wrapped.getFirstError().map(CodeAndMessage::message).orElse("Request Failed"),
-                        wrapped
-                );
-            }
-            return wrapped;
-        } catch (JsonParseException e) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to parse response body: " + rawBody, e);
-            throw new MineskinException("Failed to parse response", e);
-        }
+        return handleResponse(response.statusCode(), lowercaseHeaders(response.headers().map()), response.body(), clazz, constructor);
     }
 
     private Map<String, String> lowercaseHeaders(Map<String, java.util.List<String>> headers) {
