@@ -19,16 +19,32 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RequestHandlerResponseTest {
 
-    // Hand-written approximation of a Cloudflare 52x page, not a captured one,
-    // so tests only rely on the status code and not on the page's exact wording
-    private static final String CLOUDFLARE_52X_PAGE = """
+    // Structure of a real Cloudflare 502 error page, trimmed, hostnames and Ray ID replaced
+    private static final String CLOUDFLARE_502_PAGE = """
             <!DOCTYPE html>
-            <html lang="en-US">
+            <html class="no-js" lang="en-US">
             <head>
-                <title>api.mineskin.org | 522: Connection timed out</title>
+            <title>example.com | 502: Bad gateway</title>
             </head>
             <body>
-                <span class="code-label">Error code 522</span>
+            <div id="cf-wrapper">
+                <div id="cf-error-details" class="p-0">
+                    <header class="mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8">
+                        <h1 class="inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2">
+                            <span class="inline-block">Bad gateway</span>
+                            <span class="code-label">Error code 502</span>
+                        </h1>
+                        <div>
+                            Visit <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=example.com" target="_blank" rel="noopener noreferrer">cloudflare.com</a> for more information.
+                        </div>
+                    </header>
+                    <div class="cf-error-footer cf-wrapper">
+                        <p class="text-13">
+                            <span class="cf-footer-item sm:block sm:mb-1">Cloudflare Ray ID: <strong class="font-semibold">0123456789abcdef</strong></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
             </body>
             </html>
             """;
@@ -94,15 +110,22 @@ public class RequestHandlerResponseTest {
     @Test
     public void cloudflare52xCodeComesFromStatus() {
         UnexpectedResponseException e = assertThrows(UnexpectedResponseException.class, () ->
-                handler.handle(522, VIA_CLOUDFLARE, CLOUDFLARE_52X_PAGE));
-        assertTrue(e.isCloudflare());
-        assertEquals(Optional.of(522), e.getCloudflareErrorCode());
-        assertTrue(e.isRetryable());
-
-        UnexpectedResponseException noBody = assertThrows(UnexpectedResponseException.class, () ->
                 handler.handle(521, Map.of(), ""));
-        assertTrue(noBody.isCloudflare());
-        assertEquals(Optional.of(521), noBody.getCloudflareErrorCode());
+        assertTrue(e.isCloudflare());
+        assertEquals(Optional.of(521), e.getCloudflareErrorCode());
+        assertTrue(e.isRetryable());
+        assertEquals("HTTP 521 from Cloudflare (error 521): empty response body", e.getMessage());
+    }
+
+    @Test
+    public void cloudflareGenerated502Page() {
+        UnexpectedResponseException e = assertThrows(UnexpectedResponseException.class, () ->
+                handler.handle(502, Map.of("server", "cloudflare", "cf-ray", "0123456789abcdef-FRA", "content-type", "text/html; charset=UTF-8"), CLOUDFLARE_502_PAGE));
+        assertEquals(UnexpectedResponseException.Source.CLOUDFLARE, e.getSource());
+        assertEquals(Optional.of(502), e.getCloudflareErrorCode());
+        assertEquals("example.com | 502: Bad gateway", e.getBodySnippet());
+        assertTrue(e.isRetryable());
+        assertEquals("HTTP 502 from Cloudflare (error 502, ray 0123456789abcdef-FRA): example.com | 502: Bad gateway", e.getMessage());
     }
 
     @Test

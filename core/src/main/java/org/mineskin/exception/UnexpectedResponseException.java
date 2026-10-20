@@ -73,57 +73,65 @@ public class UnexpectedResponseException extends MineskinException {
      */
     public static UnexpectedResponseException from(int status, Map<String, String> headers, @Nullable String body, @Nullable Throwable cause) {
         String rawBody = body == null ? "" : body;
-        String contentType = headers.get("content-type");
         String serverHeader = headers.get("server");
         String cfRay = headers.get("cf-ray");
         // Behind Cloudflare every response has these headers, so they only say the response
         // passed through Cloudflare, not that Cloudflare generated it
         boolean viaCloudflare = cfRay != null || "cloudflare".equalsIgnoreCase(serverHeader);
-
-        Source source = Source.UNKNOWN;
-        String serverSoftware = null;
-        Integer cloudflareErrorCode = null;
-
-        Matcher nginxFooter = NGINX_FOOTER.matcher(rawBody);
-        Matcher errorCode = CLOUDFLARE_ERROR_CODE.matcher(rawBody);
-        if (nginxFooter.find()) {
-            source = Source.NGINX;
-            serverSoftware = nginxFooter.group(1);
-        } else if (serverHeader != null && serverHeader.toLowerCase().startsWith("nginx")) {
-            source = Source.NGINX;
-            serverSoftware = serverHeader;
-        } else if (status >= 520 && status <= 530) {
-            source = Source.CLOUDFLARE;
-            if (status <= 527) {
-                cloudflareErrorCode = status;
-            } else if (errorCode.find()) {
-                // 530 wraps a 1xxx error, e.g. 1033
-                cloudflareErrorCode = Integer.parseInt(errorCode.group(1));
-            }
-        } else if (viaCloudflare && errorCode.find()) {
-            // e.g. 409 "error code: 1001"
-            source = Source.CLOUDFLARE;
-            cloudflareErrorCode = Integer.parseInt(errorCode.group(1));
-        }
+        Origin origin = detectOrigin(status, serverHeader, viaCloudflare, rawBody);
         String snippet = summarize(rawBody);
+        return new UnexpectedResponseException(buildMessage(status, origin, cfRay, snippet), cause,
+                status, headers.get("content-type"), snippet, origin.source(), origin.serverSoftware(),
+                cfRay, origin.cloudflareErrorCode(), parseRetryAfter(headers.get("retry-after")));
+    }
 
+    private record Origin(Source source, String serverSoftware, Integer cloudflareErrorCode) {
+    }
+
+    private static Origin detectOrigin(int status, @Nullable String serverHeader, boolean viaCloudflare, String body) {
+        Matcher nginxFooter = NGINX_FOOTER.matcher(body);
+        if (nginxFooter.find()) {
+            return new Origin(Source.NGINX, nginxFooter.group(1), null);
+        }
+        if (serverHeader != null && serverHeader.toLowerCase().startsWith("nginx")) {
+            return new Origin(Source.NGINX, serverHeader, null);
+        }
+        if (status >= 520 && status <= 527) {
+            return new Origin(Source.CLOUDFLARE, null, status);
+        }
+        Integer errorCode = findCloudflareErrorCode(body);
+        if (status >= 528 && status <= 530) {
+            // 530 wraps a 1xxx error, e.g. 1033
+            return new Origin(Source.CLOUDFLARE, null, errorCode);
+        }
+        if (viaCloudflare && errorCode != null) {
+            // e.g. 409 "error code: 1001", or Cloudflare's own 502 page
+            return new Origin(Source.CLOUDFLARE, null, errorCode);
+        }
+        return new Origin(Source.UNKNOWN, null, null);
+    }
+
+    @Nullable
+    private static Integer findCloudflareErrorCode(String body) {
+        Matcher matcher = CLOUDFLARE_ERROR_CODE.matcher(body);
+        return matcher.find() ? Integer.parseInt(matcher.group(1)) : null;
+    }
+
+    private static String buildMessage(int status, Origin origin, @Nullable String cfRay, String snippet) {
         StringBuilder message = new StringBuilder("HTTP ").append(status);
-        if (source == Source.CLOUDFLARE) {
+        if (origin.source() == Source.CLOUDFLARE) {
             message.append(" from Cloudflare");
-        } else if (source == Source.NGINX) {
-            message.append(" from ").append(serverSoftware);
+        } else if (origin.source() == Source.NGINX) {
+            message.append(" from ").append(origin.serverSoftware());
         }
         List<String> details = new ArrayList<>();
-        if (cloudflareErrorCode != null) details.add("error " + cloudflareErrorCode);
+        if (origin.cloudflareErrorCode() != null) details.add("error " + origin.cloudflareErrorCode());
         if (cfRay != null) details.add("ray " + cfRay);
         if (!details.isEmpty()) {
             message.append(" (").append(String.join(", ", details)).append(")");
         }
         message.append(": ").append(snippet.isEmpty() ? "empty response body" : snippet);
-
-        return new UnexpectedResponseException(message.toString(), cause,
-                status, contentType, snippet, source, serverSoftware, cfRay, cloudflareErrorCode,
-                parseRetryAfter(headers.get("retry-after")));
+        return message.toString();
     }
 
     private static String summarize(String body) {
