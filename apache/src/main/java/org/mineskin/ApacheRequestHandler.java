@@ -2,7 +2,6 @@ package org.mineskin;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -16,9 +15,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
-import org.mineskin.data.CodeAndMessage;
-import org.mineskin.exception.MineSkinRequestException;
-import org.mineskin.exception.MineskinException;
 import org.mineskin.request.RequestHandler;
 import org.mineskin.request.RequestHandlerConstructor;
 import org.mineskin.request.RequestInterceptor;
@@ -33,7 +29,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -113,30 +108,12 @@ public class ApacheRequestHandler extends RequestHandler {
             interceptor.intercept(response);
         }
         String rawBody = null;
-        try {
+        if (response.getEntity() != null) {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                 rawBody = reader.lines().collect(Collectors.joining("\n"));
             }
-
-            JsonObject jsonBody = gson.fromJson(rawBody, JsonObject.class);
-            R wrapped = constructor.construct(
-                    response.getStatusLine().getStatusCode(),
-                    lowercaseHeaders(response.getAllHeaders()),
-                    jsonBody,
-                    gson, clazz
-            );
-            if (!wrapped.isSuccess()) {
-                throw new MineSkinRequestException(
-                        wrapped.getFirstError().map(CodeAndMessage::code).orElse("request_failed"),
-                        wrapped.getFirstError().map(CodeAndMessage::message).orElse("Request Failed"),
-                        wrapped
-                );
-            }
-            return wrapped;
-        } catch (JsonParseException e) {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to parse response body: " + rawBody, e);
-            throw new MineskinException("Failed to parse response", e);
         }
+        return handleResponse(response.getStatusLine().getStatusCode(), lowercaseHeaders(response.getAllHeaders()), rawBody, clazz, constructor);
     }
 
     private Map<String, String> lowercaseHeaders(Header[] headers) {

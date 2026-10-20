@@ -3,9 +3,11 @@ package org.mineskin.options;
 import org.mineskin.MineSkinClient;
 import org.mineskin.MineSkinClientImpl;
 import org.mineskin.data.User;
+import org.mineskin.exception.UnexpectedResponseException;
 import org.mineskin.response.UserResponse;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +59,7 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
         this.client = client;
         // Initial load
         reloadGrants().exceptionally(throwable -> {
-            MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to load grants", throwable);
+            logReloadFailure("Failed to load grants", throwable);
             return null;
         });
     }
@@ -110,9 +112,22 @@ public class AutoGenerateQueueOptions implements IQueueOptions {
         long now = System.currentTimeMillis();
         if (now - lastRefresh.get() > TimeUnit.MINUTES.toMillis(5)) { // 5 minutes
             reloadGrants().exceptionally(throwable -> {
-                MineSkinClientImpl.LOGGER.log(Level.WARNING, "Failed to reload grants", throwable);
+                logReloadFailure("Failed to reload grants", throwable);
                 return null;
             });
+        }
+    }
+
+    private static void logReloadFailure(String message, Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause instanceof CompletionException && cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        if (cause instanceof UnexpectedResponseException) {
+            // API temporarily unavailable (e.g. Cloudflare error page), the stack trace isn't useful
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, message + ": " + cause.getMessage());
+        } else {
+            MineSkinClientImpl.LOGGER.log(Level.WARNING, message, throwable);
         }
     }
 
